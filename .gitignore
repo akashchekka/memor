@@ -1,0 +1,22 @@
+# Memor data
+.memor/
+
+# Github
+.github/
+
+# Go binary
+memor
+memor.exe
+
+# Build output
+/dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
