@@ -182,6 +182,40 @@ exit 0
 //go:embed skill_template.md
 var skillTemplate string
 
+func makeInstructions(skillPath string) string {
+	return `# Memor — Project Memory
+
+This project uses [memor](https://github.com/akashchekka/memor) for persistent AI memory.
+
+**At the START of every conversation:**
+1. Run ` + "`memor context`" + ` in the terminal to load project memory
+2. Follow all instructions in ` + "`" + skillPath + "`" + `
+
+**After EVERY response:**
+1. Summarize the response in one concise sentence
+2. Run ` + "`memor add -s \"#tag: concise summary\"`" + ` in the terminal immediately
+3. Do NOT wait until the end of the conversation
+
+**Do NOT use file-editing tools to write to ` + "`.memor/memory.wal`" + ` — always use the ` + "`memor`" + ` CLI.**
+`
+}
+
+// toolInstructionFile maps each tool to its auto-discovered instruction file.
+type toolInstructionFile struct {
+	toolName string
+	path     string // relative to project root
+	content  string
+}
+
+func getToolInstructionFiles() []toolInstructionFile {
+	return []toolInstructionFile{
+		{"GitHub Copilot", filepath.Join(".github", "copilot-instructions.md"), makeInstructions(".github/skills/memor/SKILL.md")},
+		{"Claude Code", "CLAUDE.md", makeInstructions(".claude/skills/memor/SKILL.md")},
+		{"Cursor", ".cursorrules", makeInstructions(".cursor/skills/memor/SKILL.md")},
+		{"Windsurf", ".windsurfrules", makeInstructions(".windsurf/skills/memor/SKILL.md")},
+	}
+}
+
 type toolConfig struct {
 	name     string
 	path     string // relative to project root
@@ -253,6 +287,35 @@ func injectToolConfigs(projectRoot string, toolsFlag string, reinject bool) erro
 				return err
 			}
 			fmt.Printf("Updated %s\n", tc.path)
+		}
+	}
+
+	// Create instruction files for each configured tool
+	configuredTools := make(map[string]struct{})
+	for _, tc := range configs {
+		configuredTools[tc.name] = struct{}{}
+	}
+	for _, inf := range getToolInstructionFiles() {
+		if _, ok := configuredTools[inf.toolName]; !ok {
+			continue
+		}
+		// When no --tools flag, only create Copilot instruction file by default
+		if toolsFlag == "" && inf.toolName != "GitHub Copilot" {
+			continue
+		}
+		fullPath := filepath.Join(projectRoot, inf.path)
+		if _, err := os.Stat(fullPath); os.IsNotExist(err) || reinject {
+			if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
+				return err
+			}
+			if err := os.WriteFile(fullPath, []byte(inf.content), 0o644); err != nil {
+				return err
+			}
+			if reinject {
+				fmt.Printf("Updated %s\n", inf.path)
+			} else {
+				fmt.Printf("Created %s\n", inf.path)
+			}
 		}
 	}
 

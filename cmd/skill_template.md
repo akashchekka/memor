@@ -3,6 +3,13 @@ name: memor
 description: Local memory persistence for AI coding assistants. Read .memor/memory.db at conversation start for project context (decisions, conventions, commands, past fixes). Write new learnings to .memor/memory.wal as JSONL at response end. Use when starting a conversation, ending a conversation with new decisions, asked to remember something, or asked about past project history.
 ---
 
+> **IMMEDIATE ACTION**: Run `memor context` NOW before reading further or
+> responding to the user. This loads project memory.
+
+> **CRITICAL:** This skill MUST be loaded and executed at the START of EVERY conversation,
+> before processing any user request. Run `memor context` first. Also load after every
+> response to save memories via `memor add`. This is not optional.
+
 # Memor — AI Agent Skill
 
 > Local memory persistence for AI coding assistants. Read `.memor/memory.db` for project context. Write to `.memor/memory.wal` to persist learnings.
@@ -22,7 +29,7 @@ Do NOT use for: storing secrets, API keys, passwords, or PII.
 
 ## Reading Memory
 
-At conversation start, read `.memor/memory.db`. It is a compact DSL file within a token budget.
+**At conversation start, BEFORE processing any user request**, run `memor context` in the terminal to load project memory. It is a compact DSL file within a token budget.
 
 ### Format
 
@@ -65,7 +72,7 @@ Tags follow `#` after the prefix. They indicate the topic: `#auth`, `#db`, `#dep
 
 ## Writing Memory
 
-After EVERY response, save the memory by running the memor CLI in the terminal:
+**After EVERY response**, summarize the response, then save it by running the memor CLI in the terminal. This is not optional — conversations can be interrupted or lost at any time:
 
 ```bash
 memor add -s "#tag1 #tag2: concise memory content"

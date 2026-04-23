@@ -75,6 +75,19 @@ func runPurge(cmd *cobra.Command, args []string) error {
 				dir = filepath.Dir(dir)
 			}
 		}
+
+		// Remove instruction files (copilot-instructions.md, CLAUDE.md, .cursorrules, .windsurfrules)
+		for _, inf := range getToolInstructionFiles() {
+			fullPath := filepath.Join(cwd, inf.path)
+			if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+				continue
+			}
+			if err := os.Remove(fullPath); err != nil {
+				fmt.Fprintf(os.Stderr, "warning: could not remove %s: %v\n", inf.path, err)
+				continue
+			}
+			fmt.Printf("Removed %s\n", inf.path)
+		}
 	}
 
 	fmt.Println("Purge complete.")
