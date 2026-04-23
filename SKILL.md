@@ -89,12 +89,14 @@ Do NOT wait until the end of the conversation. Write immediately — conversatio
 
 ### What to Write
 
+Write **2-3 sentences** that capture the decision, the reasoning, and any rejected alternatives. One-liners lose critical context — especially for architectural decisions and debugging. Include the *why*, not just the *what*.
+
 | Signal in Conversation | Type | Example |
 |---|---|---|
-| "We decided to...", "Let's use...", "Switching to..." | semantic (default) | `memor add -s "#arch: Switched from Prisma to Drizzle ORM"` |
-| "The bug was...", "Fixed by...", "Migrated..." | episodic | `memor add --type episodic -s "#perf #db: Fixed N+1 by adding .with() joins"` |
-| "To do X, run...", "Deploy by..." | procedural | `memor add --type procedural -s "#deploy: pnpm turbo deploy --filter=@app/api"` |
-| "I prefer...", "Always use...", "Never use..." | preference | `memor add --type preference -s "#typescript: No any types, use unknown + type guards"` |
+| "We decided to...", "Let's use...", "Switching to..." | semantic (default) | `memor add -s "#arch: Switched from Prisma to Drizzle ORM. Prisma's generated client bloated the bundle by 2MB and cold starts exceeded 3s on Lambda. Drizzle is thinner, supports the same Postgres features we need."` |
+| "The bug was...", "Fixed by...", "Migrated..." | episodic | `memor add --type episodic -s "#perf #db: Fixed N+1 in dashboard loader by adding .with() joins on user->orders relation. Root cause was lazy loading defaults in Drizzle — always use explicit joins for list endpoints."` |
+| "To do X, run...", "Deploy by..." | procedural | `memor add --type procedural -s "#deploy: pnpm turbo deploy --filter=@app/api. Requires AWS_PROFILE=prod set first. Deploys to us-east-1 Lambda via SST."` |
+| "I prefer...", "Always use...", "Never use..." | preference | `memor add --type preference -s "#typescript: No any types, use unknown + type guards. Enforced by eslint rule @typescript-eslint/no-explicit-any."` |
 
 ### What NOT to Write
 
@@ -109,9 +111,24 @@ Do NOT wait until the end of the conversation. Write immediately — conversatio
 Developer asked you to add Redis caching to the auth endpoint. You did it. Now write immediately:
 
 ```bash
-memor add -s "#cache #auth: Redis 7 for auth session cache, 15min TTL"
-memor add --type procedural -s "#cache: Redis connection via REDIS_URL env var, ioredis client in src/lib/redis.ts"
+memor add -s "#cache #auth: Added Redis 7 for auth session cache with 15min TTL. Chose Redis over in-memory cache because auth service runs on 3 replicas and sessions must be shared. Using ioredis client in src/lib/redis.ts."
+memor add --type procedural -s "#cache: Redis connection via REDIS_URL env var, ioredis client in src/lib/redis.ts. Connection pooling set to max 10, min 2. Falls back to direct auth DB lookup if Redis is down."
 ```
+
+---
+
+## When to Use Other Commands
+
+These commands should be triggered automatically based on conversation context — not only when the user asks.
+
+| Signal in Conversation | Action | Example |
+|---|---|---|
+| A decision **changed** or was **reversed** (e.g., "actually, let's switch from X to Y") | Use `--supersedes` to replace the old memory. Run `memor search` first to find the old entry ID. | `memor search "Prisma"` → find ID `a1b2c3`, then `memor add --supersedes a1b2c3 -s "#arch: Switched to Drizzle ORM. Prisma cold starts were too slow on Lambda."` |
+| A fix is **temporary**, a workaround, or has a known expiry | Use `--expires` to auto-archive the memory | `memor add --expires 30d -s "#workaround: Using polling instead of websockets until ALB supports them in Q3."` |
+| A review or revisit is planned for a **specific date** | Use `--expires` with a date | `memor add --expires 2026-12-31 -s "#arch: Review auth strategy — evaluate passkeys adoption by end of year."` |
+| User asks about **past decisions**, or you need to check if a topic was discussed before | Run `memor search` before answering | `memor search "caching strategy" --top 5` |
+| A memory from `memor context` **directly helped** you give a better answer | Run `memor reinforce` to boost its relevance score | `memor reinforce a1b2c3` |
+| You've written **several memories** this conversation (3+) | Run `memor compact --if-needed` to keep the WAL tidy | `memor compact --if-needed` |
 
 ---
 
