@@ -37,4 +37,5 @@ func init() {
 	rootCmd.AddCommand(reinforceCmd)
 	rootCmd.AddCommand(knowledgeCmd)
 	rootCmd.AddCommand(purgeCmd)
+	rootCmd.AddCommand(cleanCmd)
 }

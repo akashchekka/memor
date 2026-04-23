@@ -42,22 +42,27 @@ func runPurge(cmd *cobra.Command, args []string) error {
 
 	if purgeAll {
 		for _, tc := range getToolConfigs() {
-			fullPath := filepath.Join(cwd, tc.path)
-			if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+			// Remove the skills/memor/ directory for this tool
+			skillDir := filepath.Dir(filepath.Join(cwd, tc.path))
+			if _, err := os.Stat(skillDir); os.IsNotExist(err) {
 				continue
 			}
-			if err := os.Remove(fullPath); err != nil {
-				fmt.Fprintf(os.Stderr, "warning: could not remove %s: %v\n", tc.path, err)
+			if err := os.RemoveAll(skillDir); err != nil {
+				fmt.Fprintf(os.Stderr, "warning: could not remove %s: %v\n", filepath.Dir(tc.path), err)
 				continue
 			}
-			fmt.Printf("Removed %s\n", tc.path)
-		}
+			fmt.Printf("Removed %s\n", filepath.Dir(tc.path))
 
-		// Clean up empty .github/ directory if we created it
-		githubDir := filepath.Join(cwd, ".github")
-		entries, err := os.ReadDir(githubDir)
-		if err == nil && len(entries) == 0 {
-			os.Remove(githubDir)
+			// Clean up empty parent directories (skills/, .github/, etc.)
+			dir := filepath.Dir(skillDir)
+			for dir != cwd {
+				entries, err := os.ReadDir(dir)
+				if err != nil || len(entries) > 0 {
+					break
+				}
+				os.Remove(dir)
+				dir = filepath.Dir(dir)
+			}
 		}
 	}
 

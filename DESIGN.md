@@ -286,7 +286,7 @@ The token-optimized read target. AI tools inject this file at conversation start
 #### Example
 
 ```
-@mem v1 | 24 entries | budget:2000 | compacted:2026-04-22T10:00:00Z
+@mem v1 | 24 entries | budget:10000 | compacted:2026-04-22T10:00:00Z
 
 @s #arch: pnpm workspaces + Turborepo monorepo [2026-01-15]
 @s #api #decision: REST + OpenAPI 3.1, no GraphQL [2026-02-01]
@@ -691,7 +691,7 @@ Created .memor/memory.wal
 Created .memor/config.toml
 Installed .git/hooks/pre-commit (memory auto-extract)
 Added .memor/ to .gitignore
-Created .github/copilot-instructions.md with memory instructions
+Created .github/skills/memor/SKILL.md
 Found .memor-bootstrap.jsonl — imported 0 entries
 ```
 
@@ -709,7 +709,7 @@ pre_commit = false
 
 ### Auto-Injection via memor init
 
-By default, memor init creates `.github/copilot-instructions.md` with memory instructions (GitHub Copilot). Other AI tool configs (Claude Code, Cursor, Windsurf) are created only when explicitly requested via `--tools` or when they already exist in the project (in which case the memory block is appended).
+By default, memor init copies the memor SKILL.md into `.github/skills/memor/SKILL.md` (GitHub Copilot). Other AI tool skill directories (Claude Code, Cursor, Windsurf) are created only when explicitly requested via `--tools`.
 
 ```bash
 $ memor init
@@ -717,89 +717,48 @@ Created .memor/config.toml
 Created .memor/memory.db
 Created .memor/memory.wal
 Added .memor/ to .gitignore
-Created .github/copilot-instructions.md with memory instructions
+Created .github/skills/memor/SKILL.md
 Memor initialized successfully.
 
-# To also create configs for other tools:
+# To also create skills for other tools:
 $ memor init --tools claude,cursor,windsurf
 ```
 
-### Tool Config Files
+### Tool Skill Locations
 
-| File | Tool | Created By Default | Created With --tools |
+| Skill Path | Tool | Created By Default | Created With --tools |
 |---|---|---|---|
-| .github/copilot-instructions.md | GitHub Copilot | Yes | `copilot` |
-| CLAUDE.md | Claude Code | No | `claude` |
-| .cursorrules | Cursor | No | `cursor` |
-| .windsurfrules | Windsurf | No | `windsurf` |
-
-If a tool config file already exists in the project, memor init appends the memory instruction block to it regardless of the `--tools` flag.
-
-Re-running memor init is safe — it checks for an existing `## Project Memory` section and skips files already configured.
+| .github/skills/memor/SKILL.md | GitHub Copilot | Yes | `copilot` |
+| .claude/skills/memor/SKILL.md | Claude Code | No | `claude` |
+| .cursor/skills/memor/SKILL.md | Cursor | No | `cursor` |
+| .windsurf/skills/memor/SKILL.md | Windsurf | No | `windsurf` |
 
 ### What Gets Injected
 
-The same block is injected into each file (adapted for that tool's format):
+The same SKILL.md is copied to each tool's skills directory. It contains:
 
-### GitHub Copilot
-
-Add to .github/copilot-instructions.md:
-
-```markdown
-## Project Memory
-
-At the start of every conversation, read .memor/memory.db for persistent
-project context including architecture decisions, conventions, and workflows.
-
-After EVERY response where a decision was made, a problem was solved, a command
-was run, or something worth remembering happened, append new memories to
-.memor/memory.wal in JSONL format:
-{"t":<unix_ts>,"y":"<s|e|p|f>","id":"<sha256_12>","tags":["<tag>"],"c":"<concise memory>","a":"<user>","s":"copilot"}
-
-Do NOT wait until the end of the conversation. Write immediately — conversations
-can be interrupted or lost at any time.
-```
-
-### Claude Code
-
-Add to CLAUDE.md:
-
-```markdown
-## Project Memory
-
-Always read .memor/memory.db at conversation start for persistent context.
-After EVERY response where something worth remembering happened, immediately
-append to .memor/memory.wal in JSONL format. Do NOT wait until conversation end.
-Format: {"t":<unix_ts>,"y":"<type>","id":"<sha256_12>","tags":[...],"c":"<content>","a":"<user>","s":"claude"}
-```
-
-### Cursor
-
-Add to .cursorrules:
-
-```
-Read .memor/memory.db at conversation start for project memory.
-After every response where something worth remembering happened, immediately
-write new memories to .memor/memory.wal as JSONL. Do NOT wait until conversation end.
-Format: {"t":<timestamp>,"y":"<type>","id":"<sha256_12>","tags":[...],"c":"<content>","s":"cursor"}
-```
+1. **Reading instructions** — how to read `.memor/memory.db` at conversation start
+2. **Writing instructions** — how to save memories using `memor add` CLI after every response
+3. **Memory type reference** — semantic, episodic, procedural, preference
+4. **Full CLI reference** — all available commands and flags
+5. **File locations** — where each memor file lives and its purpose
 
 ### Any Other Tool
 
 The pattern is universal:
-1. **READ** .memor/memory.db at conversation start
-2. **APPEND** to .memor/memory.wal after every response (not just at conversation end)
-3. Both files are plain text — any tool that can read/write files works
+1. **READ** `.memor/memory.db` at conversation start
+2. **WRITE** memories via `memor add` after every response
+3. Both files are plain text — any tool that can read files and run terminal commands works
 
-### Re-Injecting After Upgrade
+### Updating After Upgrade
 
-If the memory instruction template changes in a future memor version:
+If the SKILL.md template changes in a future memor version:
 
 ```bash
 memor init --reinject
 ```
 
-Replaces the `## Project Memory` block in all detected config files with the latest template.
+Overwrites all existing skill files with the latest template.
 
 ### MCP Server (optional)
 
@@ -908,7 +867,7 @@ memor init auto-imports the bootstrap file if it exists:
 ```bash
 $ memor init
 Created .memor/
-Created .github/copilot-instructions.md with memory instructions
+Created .github/skills/memor/SKILL.md
 Found .memor-bootstrap.jsonl — imported 42 entries (38 memories, 4 knowledge sections)
 ```
 
@@ -929,10 +888,10 @@ This lets teams share **curated conventions and decisions** via git while keepin
 ## 16. CLI Reference
 
 ```bash
-# Initialize memory in current project (creates .github/copilot-instructions.md by default)
+# Initialize memory in current project (creates .github/skills/memor/SKILL.md by default)
 memor init
-memor init --tools claude,cursor,windsurf  # also create configs for other AI tools
-memor init --reinject                      # update injected instructions to latest template
+memor init --tools claude,cursor,windsurf  # also create skills for other AI tools
+memor init --reinject                      # update skill files to latest template
 
 # Add a memory
 memor add --type semantic --tags "auth,api" "OAuth2 + PKCE via Auth0"
@@ -962,6 +921,13 @@ memor rebuild                          # rebuild all indexes from WAL + archive
 memor stats                            # show entry counts, token usage, index health
 memor validate                         # verify file integrity
 
+# Reset all memory data (preserves .memor/ directory and config.toml)
+memor clean
+
+# Remove all memor files
+memor purge
+memor purge --all                      # also remove skill files from AI tool directories
+
 # Export / Import
 memor export > memories.jsonl
 memor export --all > full-context.jsonl
@@ -990,7 +956,7 @@ memor knowledge import knowledge-bundle.jsonl
 ```toml
 [memory]
 schema_version = "1.0"
-token_budget = 2000               # Max tokens for memory.db snapshot
+token_budget = 10000               # Max tokens for memory.db snapshot
 wal_max_entries = 100             # Trigger compaction when WAL exceeds this
 archive_after_days = 90           # Move episodic entries to archive after N days
 

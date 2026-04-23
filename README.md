@@ -58,7 +58,7 @@ cd your-project
 memor init
 ```
 
-This creates `.memor/` (auto-added to `.gitignore`), installs a pre-commit safety hook, and injects instructions into your AI tool configs.
+This creates `.memor/` (auto-added to `.gitignore`), installs a pre-commit safety hook, and copies the memor SKILL.md into your AI tool's skills directory (`.github/skills/memor/SKILL.md` for Copilot by default).
 
 ### Add a memory
 
@@ -72,7 +72,7 @@ memor add -s "#arch #db: PostgreSQL 16 with Drizzle ORM"
 ### Get context for a conversation
 
 ```bash
-memor context --budget 2000 --query "deploy api"
+memor context --budget 10000 --query "deploy api"
 ```
 
 Returns a packed block of relevant memories and knowledge sections, ready for injection into any AI tool's context window.
@@ -120,7 +120,7 @@ memor query --tags "auth,api"
 ### Snapshot format (`memory.db`)
 
 ```
-@mem v1 | 24 entries | budget:2000 | compacted:2026-04-22T10:00:00Z
+@mem v1 | 24 entries | budget:10000 | compacted:2026-04-22T10:00:00Z
 
 @s #arch: pnpm workspaces + Turborepo monorepo [2026-01-15]
 @s #auth #decision: OAuth2+PKCE via Auth0 [2026-03-10]
@@ -144,7 +144,7 @@ memor query --tags "auth,api"
 
 | Command | Description |
 |---|---|
-| `memor init` | Initialize `.memor/` in the current project, set up hooks and tool configs |
+| `memor init` | Initialize `.memor/` in the current project, set up hooks and skill files |
 | `memor add` | Append a new memory to the WAL |
 | `memor context` | Get relevant context within a token budget (the main agent entry point) |
 | `memor search <query>` | Full-text search memories by keyword (trigram + BM25) |
@@ -157,6 +157,7 @@ memor query --tags "auth,api"
 | `memor knowledge scan` | Auto-discover and index known file patterns |
 | `memor knowledge refresh` | Re-index changed files |
 | `memor knowledge list` | Show indexed documents and sections |
+| `memor clean` | Reset all memory data, preserve `.memor/` directory and config |
 | `memor purge` | Remove all memor files from the project |
 
 ---
@@ -175,16 +176,18 @@ Memor combines well-known algorithms for sub-millisecond retrieval without embed
 
 ## AI Tool Integration
 
-Memor is tool-agnostic. `memor init --tools copilot,claude,cursor,windsurf` injects read/write instructions into each tool's config file:
+Memor is tool-agnostic. `memor init` copies the memor SKILL.md into each tool's skills directory:
 
-| Tool | Config File |
+| Tool | Skill Location |
 |---|---|
-| GitHub Copilot | `.github/copilot-instructions.md` |
-| Claude Code | `CLAUDE.md` |
-| Cursor | `.cursorrules` |
-| Windsurf | `.windsurfrules` |
+| GitHub Copilot | `.github/skills/memor/SKILL.md` |
+| Claude Code | `.claude/skills/memor/SKILL.md` |
+| Cursor | `.cursor/skills/memor/SKILL.md` |
+| Windsurf | `.windsurf/skills/memor/SKILL.md` |
 
-At conversation start, the AI tool reads `.memor/memory.db` for project context. After every response where a decision was made or a problem was solved, it appends to `.memor/memory.wal`.
+By default, only the Copilot skill is created. Use `memor init --tools claude,cursor,windsurf` to create skills for other tools.
+
+At conversation start, the AI tool reads `.memor/memory.db` for project context. After every response, it saves memories using `memor add`.
 
 ---
 
@@ -194,7 +197,7 @@ At conversation start, the AI tool reads `.memor/memory.db` for project context.
 
 ```toml
 [memory]
-token_budget = 2000          # Max tokens for memory.db
+token_budget = 10000         # Max tokens for memory.db
 wal_max_entries = 100        # Auto-compact threshold
 
 [ranking]

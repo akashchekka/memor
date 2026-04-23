@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	_ "embed"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -50,7 +51,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 
 	// Create empty memory.db
 	if _, err := os.Stat(paths.MemoryDB); os.IsNotExist(err) {
-		if err := os.WriteFile(paths.MemoryDB, []byte("@mem v1 | 0 entries | budget:2000 | compacted:none\n"), 0o644); err != nil {
+		if err := os.WriteFile(paths.MemoryDB, []byte("@mem v1 | 0 entries | budget:10000 | compacted:none\n"), 0o644); err != nil {
 			return fmt.Errorf("write memory.db: %w", err)
 		}
 		fmt.Println("Created", paths.MemoryDB)
@@ -163,19 +164,8 @@ exit 0
 	return nil
 }
 
-const memoryInstructionBlock = `## Project Memory
-
-At the start of every conversation, read .memor/memory.db for persistent
-project context including architecture decisions, conventions, and workflows.
-
-After EVERY response where a decision was made, a problem was solved, a command
-was run, or something worth remembering happened, append new memories to
-.memor/memory.wal in JSONL format:
-{"t":<unix_ts>,"y":"<s|e|p|f>","id":"<sha256_12>","tags":["<tag>"],"c":"<concise memory>"}
-
-Do NOT wait until the end of the conversation. Write immediately — conversations
-can be interrupted or lost at any time.
-`
+//go:embed skill_template.md
+var skillTemplate string
 
 type toolConfig struct {
 	name     string
@@ -187,23 +177,23 @@ func getToolConfigs() []toolConfig {
 	return []toolConfig{
 		{
 			name:     "GitHub Copilot",
-			path:     filepath.Join(".github", "copilot-instructions.md"),
-			template: memoryInstructionBlock,
+			path:     filepath.Join(".github", "skills", "memor", "SKILL.md"),
+			template: skillTemplate,
 		},
 		{
 			name:     "Claude Code",
-			path:     "CLAUDE.md",
-			template: memoryInstructionBlock,
+			path:     filepath.Join(".claude", "skills", "memor", "SKILL.md"),
+			template: skillTemplate,
 		},
 		{
 			name:     "Cursor",
-			path:     ".cursorrules",
-			template: memoryInstructionBlock,
+			path:     filepath.Join(".cursor", "skills", "memor", "SKILL.md"),
+			template: skillTemplate,
 		},
 		{
 			name:     "Windsurf",
-			path:     ".windsurfrules",
-			template: memoryInstructionBlock,
+			path:     filepath.Join(".windsurf", "skills", "memor", "SKILL.md"),
+			template: skillTemplate,
 		},
 	}
 }
@@ -228,71 +218,27 @@ func injectToolConfigs(projectRoot string, toolsFlag string, reinject bool) erro
 		configs = filtered
 	}
 
-	// When no --tools flag, create only GitHub Copilot config by default.
-	// Other tools (Claude, Cursor, Windsurf) are created only if they already
-	// exist (append) or are explicitly requested via --tools.
-	if toolsFlag == "" {
-		copilotConfig := configs[0] // GitHub Copilot is first
-		fullPath := filepath.Join(projectRoot, copilotConfig.path)
-		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-			if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
-				return err
-			}
-			if err := os.WriteFile(fullPath, []byte(copilotConfig.template), 0o644); err != nil {
-				return err
-			}
-			fmt.Printf("Created %s with memory instructions\n", copilotConfig.path)
-		}
-	}
-
 	for _, tc := range configs {
 		fullPath := filepath.Join(projectRoot, tc.path)
 
-		content, err := os.ReadFile(fullPath)
-		if err != nil {
-			if os.IsNotExist(err) {
-				if toolsFlag != "" {
-					// Explicitly requested — create it
-					if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
-						return err
-					}
-					if err := os.WriteFile(fullPath, []byte(tc.template), 0o644); err != nil {
-						return err
-					}
-					fmt.Printf("Created %s with memory instructions\n", tc.path)
-				}
+		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+			// When no --tools flag, only create Copilot by default
+			if toolsFlag == "" && tc.name != "GitHub Copilot" {
 				continue
 			}
-			return err
-		}
-
-		if strings.Contains(string(content), "## Project Memory") {
-			if reinject {
-				// Replace existing block
-				before, _, found := strings.Cut(string(content), "## Project Memory")
-				if found {
-					newContent := before + tc.template
-					if err := os.WriteFile(fullPath, []byte(newContent), 0o644); err != nil {
-						return err
-					}
-					fmt.Printf("Updated memory instructions in %s\n", tc.path)
-				}
+			if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
+				return err
 			}
-			continue // already configured
+			if err := os.WriteFile(fullPath, []byte(tc.template), 0o644); err != nil {
+				return err
+			}
+			fmt.Printf("Created %s\n", tc.path)
+		} else if reinject {
+			if err := os.WriteFile(fullPath, []byte(tc.template), 0o644); err != nil {
+				return err
+			}
+			fmt.Printf("Updated %s\n", tc.path)
 		}
-
-		// Append
-		f, err := os.OpenFile(fullPath, os.O_APPEND|os.O_WRONLY, 0o644)
-		if err != nil {
-			return err
-		}
-		appendContent := "\n" + tc.template
-		_, err = f.WriteString(appendContent)
-		f.Close()
-		if err != nil {
-			return err
-		}
-		fmt.Printf("Detected %s — appended memory instructions\n", tc.path)
 	}
 
 	return nil

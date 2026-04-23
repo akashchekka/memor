@@ -64,7 +64,7 @@ func Default() Config {
 	return Config{
 		Memory: MemoryConfig{
 			SchemaVersion:    "1.0",
-			TokenBudget:      2000,
+			TokenBudget:      10000,
 			WALMaxEntries:    100,
 			ArchiveAfterDays: 90,
 		},
