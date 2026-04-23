@@ -1,3 +1,22 @@
+// search.go — memor search, memor query
+//
+// memor search: Full-text search across all memories using trigram index + BM25
+// ranking. Returns scored results sorted by relevance.
+//
+//   Flags: --top (number of results, default: 5)
+//
+//   Examples:
+//     memor search "redis cache"
+//     memor search "deploy" --top 10
+//     memor search "pnpm build monorepo"
+//
+// memor query: Filter memories by tags. Returns all entries matching the tags.
+//
+//   Flags: --tags (required, comma-separated)
+//
+//   Examples:
+//     memor query --tags "auth"
+//     memor query --tags "db,perf"
 package cmd
 
 import (

@@ -1,3 +1,19 @@
+// knowledge.go — memor knowledge
+//
+// Manages the knowledge index — indexes skills, instructions, and documentation
+// files into section-level chunks for retrieval.
+//
+// Subcommands:
+//   add      Index a specific document into the knowledge base
+//   scan     Auto-discover and index all known file patterns
+//   refresh  Re-index files that changed since last scan
+//   list     Show indexed documents and sections
+//
+// Examples:
+//   memor knowledge add ./docs/runbook.md
+//   memor knowledge scan
+//   memor knowledge refresh
+//   memor knowledge list
 package cmd
 
 import (

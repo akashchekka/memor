@@ -1,3 +1,18 @@
+// init.go — memor init
+//
+// Initializes Memor in the current project. Creates the .memor/ directory with
+// config.toml, empty memory.db and memory.wal, installs a git pre-commit hook,
+// adds .memor/ to .gitignore, and copies SKILL.md into AI tool skills directories.
+// Imports .memor-bootstrap.jsonl if present.
+//
+// Flags:
+//   --tools      Comma-separated tools to configure: copilot,claude,cursor,windsurf
+//   --reinject   Update existing skill files to latest template
+//
+// Examples:
+//   memor init
+//   memor init --tools copilot,claude,cursor
+//   memor init --reinject
 package cmd
 
 import (

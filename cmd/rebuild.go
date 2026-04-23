@@ -1,3 +1,11 @@
+// rebuild.go — memor rebuild
+//
+// Rebuilds all indexes (trigram, bloom, tags, recency) from scratch using entries
+// from the snapshot, WAL, and archive. Use after manual edits or if indexes
+// become corrupted.
+//
+// Examples:
+//   memor rebuild
 package cmd
 
 import (

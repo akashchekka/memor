@@ -1,3 +1,14 @@
+// purge.go — memor purge
+//
+// Deletes the entire .memor/ directory. With --all, also removes skill files
+// from AI tool directories and cleans up empty parent directories.
+//
+// Flags:
+//   --all   Also remove skill files from AI tool directories
+//
+// Examples:
+//   memor purge
+//   memor purge --all
 package cmd
 
 import (

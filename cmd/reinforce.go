@@ -1,3 +1,14 @@
+// reinforce.go — memor reinforce
+//
+// Bumps a memory's relevance by moving it to the front of the recency ring.
+// Useful when the AI or developer references a memory and wants to keep it from
+// being archived during compaction.
+//
+// Args: memory ID (required)
+//
+// Examples:
+//   memor reinforce 0a3f9c2b1e7d
+//   memor reinforce b4e1a7c3d9f2
 package cmd
 
 import (

@@ -1,3 +1,10 @@
+// stats.go — memor stats
+//
+// Shows entry counts, token usage, file sizes, and index health. Useful for
+// monitoring memory growth and checking if compaction is needed.
+//
+// Examples:
+//   memor stats
 package cmd
 
 import (

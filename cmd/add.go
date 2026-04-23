@@ -1,3 +1,20 @@
+// add.go — memor add
+//
+// Appends a new memory entry to the WAL. Supports two modes: explicit flags
+// (--type, --tags) or shorthand (-s "#tag: content"). Auto-generates timestamp
+// and content-hash ID.
+//
+// Flags:
+//   --type        Memory type: semantic|episodic|procedural|preference (default: semantic)
+//   --tags        Comma-separated tags
+//   -s, --short   Shorthand format: "#tag1 #tag2: content"
+//   --expires     Expiry date (YYYY-MM-DD) or duration (30d)
+//   --supersedes  ID of memory this replaces
+//
+// Examples:
+//   memor add -s "#auth #api: OAuth2+PKCE via Auth0"
+//   memor add --type episodic --tags "bug,db" "Fixed N+1 query in dashboard loader"
+//   memor add --expires 30d -s "#workaround: Using retry loop for flaky S3 uploads"
 package cmd
 
 import (

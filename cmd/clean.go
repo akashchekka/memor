@@ -1,3 +1,11 @@
+// clean.go — memor clean
+//
+// Resets all memory data — clears memory.db, memory.wal, memory.archive,
+// knowledge.db, and all index files. Preserves the .memor/ directory structure
+// and config.toml. Use when you want a fresh start without re-running init.
+//
+// Examples:
+//   memor clean
 package cmd
 
 import (

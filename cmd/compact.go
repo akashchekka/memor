@@ -1,3 +1,15 @@
+// compact.go — memor compact
+//
+// Merges the WAL into memory.db. Deduplicates entries by content hash, handles
+// supersedes chains, scores by relevance (type weight + BM25 + recency), enforces
+// the token budget, and archives entries that don't fit.
+//
+// Flags:
+//   --if-needed   Only run if WAL exceeds wal_max_entries threshold from config
+//
+// Examples:
+//   memor compact
+//   memor compact --if-needed
 package cmd
 
 import (
