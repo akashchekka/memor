@@ -1,7 +1,10 @@
 {
-  "name": "memor-cli",
+  "name": "@memor-dev/memor",
   "version": "0.1.0",
   "description": "Local memory persistence for AI coding assistants. Zero cloud, zero git commits.",
+  "publishConfig": {
+    "access": "public"
+  },
   "keywords": [
     "ai",
     "memory",
