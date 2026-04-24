@@ -39,4 +39,6 @@ func init() {
 	rootCmd.AddCommand(purgeCmd)
 	rootCmd.AddCommand(cleanCmd)
 	rootCmd.AddCommand(codeCmd)
+	rootCmd.AddCommand(exportCmd)
+	rootCmd.AddCommand(importCmd)
 }

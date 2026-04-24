@@ -698,7 +698,7 @@ body {
 /* ── Memory Types ── */
 .memory-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 1.25rem;
 }
 
@@ -706,7 +706,7 @@ body {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 1.75rem;
+  padding: 1.5rem;
   position: relative;
   transition: all 0.3s;
 }
@@ -728,11 +728,13 @@ body {
 .memory-card.episodic .memory-prefix { color: var(--orange); }
 .memory-card.procedural .memory-prefix { color: var(--green); }
 .memory-card.preference .memory-prefix { color: var(--pink); }
+.memory-card.code .memory-prefix { color: var(--blue); }
 
 .memory-card.semantic { border-top: 3px solid var(--accent); }
 .memory-card.episodic { border-top: 3px solid var(--orange); }
 .memory-card.procedural { border-top: 3px solid var(--green); }
 .memory-card.preference { border-top: 3px solid var(--pink); }
+.memory-card.code { border-top: 3px solid var(--blue); }
 
 .memory-card h3 {
   font-family: var(--font);

@@ -126,17 +126,22 @@ memor query --tags "auth,api"
 | `@e` | Episodic | Events, bugs fixed, migrations completed |
 | `@p` | Procedural | Commands, workflows, how-tos |
 | `@f` | Preference | Developer style preferences (permanent) |
+| `@c` | Code | Structured file summaries (exports, deps, logic) |
 
 ### Snapshot format (`memory.db`)
 
 ```
-@mem v1 | 24 entries | budget:10000 | compacted:2026-04-22T10:00:00Z
+@mem v1 | 24 entries | budget:15000 | compacted:2026-04-22T10:00:00Z
 
 @s #arch: pnpm workspaces + Turborepo monorepo [2026-01-15]
 @s #auth #decision: OAuth2+PKCE via Auth0 [2026-03-10]
 @p #deploy: pnpm turbo deploy --filter=@app/api [2026-03-01]
 @e #perf #db: Fixed N+1 in dashboard loader [2026-04-20]
 @f #typescript: No any, use unknown + type guards [perm]
+@c src/lib/auth.ts [187 LOC | a3f9c2]
+  exports: refreshToken(), validateSession(), revokeSession()
+  deps: src/lib/redis.ts, src/config/env.ts
+  summary: Auth middleware — JWT access tokens, refresh rotation
 ```
 
 ~51% fewer tokens than equivalent Markdown.
@@ -163,6 +168,11 @@ memor query --tags "auth,api"
 | `memor stats` | Show entry counts, token usage, and index health |
 | `memor reinforce <id>` | Bump relevance of a useful memory |
 | `memor rebuild` | Rebuild all indexes from WAL + archive |
+| `memor code save <file>` | Save a structured code file summary (exports, deps, summary, logic) |
+| `memor code load [file]` | Load code summaries by path or `--query`, shows fresh/stale/missing |
+| `memor code list` | List all mapped code files |
+| `memor export` | Export memories as portable JSONL (auto-compacts first) |
+| `memor import <file>` | Import memories from JSONL with `--skip-duplicates`, `--dry-run` |
 | `memor knowledge add <file>` | Index a document into the knowledge base |
 | `memor knowledge scan` | Auto-discover and index known file patterns |
 | `memor knowledge refresh` | Re-index changed files |
@@ -207,7 +217,7 @@ At conversation start, the AI tool reads `.memor/memory.db` for project context.
 
 ```toml
 [memory]
-token_budget = 10000         # Max tokens for memory.db
+token_budget = 15000         # Max tokens for memory.db
 wal_max_entries = 100        # Auto-compact threshold
 
 [ranking]
@@ -253,11 +263,13 @@ go test ./...
 ```
 main.go              # Entry point
 cmd/                 # CLI commands (cobra)
+  skill/             # Embedded SKILL.md template
 internal/
   config/            # config.toml parsing
+  constants/         # Centralized constants
   engine/            # Compaction, context retrieval, knowledge indexing
   index/             # Trigram, BM25, Bloom filter, recency ring
-  memory/            # Memory entry types
+  memory/            # Memory entry types (including CodeMeta)
   store/             # WAL, snapshot, paths
   token/             # Token counting
 ```

@@ -206,7 +206,7 @@
   <section class="section section-dark" id="memory-types">
     <div class="section-inner">
       <div class="section-eyebrow">Cognitive Model</div>
-      <h2 class="section-title">Four types of memory</h2>
+      <h2 class="section-title">Five types of memory</h2>
       <p class="section-subtitle">Inspired by human cognitive memory — each type has its own lifecycle and decay behavior.</p>
 
       <div class="memory-grid">
@@ -244,6 +244,15 @@
           <div class="memory-meta">Weight: 0.9 &middot; Decay: none</div>
           <div class="memory-example">
             <code>@f #ts: No any, use unknown + type guards</code>
+          </div>
+        </div>
+        <div class="memory-card code">
+          <div class="memory-prefix">@c</div>
+          <h3>Code</h3>
+          <p>Structured file summaries — exports, deps, logic. Agents understand code without re-reading files.</p>
+          <div class="memory-meta">Weight: 0.7 &middot; Decay: medium</div>
+          <div class="memory-example">
+            <code>@c src/lib/auth.ts [187 LOC | a3f9c2]</code>
           </div>
         </div>
       </div>
@@ -289,6 +298,22 @@
         <div class="cli-item">
           <code class="cli-cmd">memor knowledge add</code>
           <span class="cli-desc">Index a document into the knowledge base</span>
+        </div>
+        <div class="cli-item">
+          <code class="cli-cmd">memor code save &lt;file&gt;</code>
+          <span class="cli-desc">Save structured code summary (exports, deps, logic)</span>
+        </div>
+        <div class="cli-item">
+          <code class="cli-cmd">memor code load</code>
+          <span class="cli-desc">Load code summaries by path or query</span>
+        </div>
+        <div class="cli-item">
+          <code class="cli-cmd">memor export</code>
+          <span class="cli-desc">Export memories as portable JSONL</span>
+        </div>
+        <div class="cli-item">
+          <code class="cli-cmd">memor import &lt;file&gt;</code>
+          <span class="cli-desc">Import memories from JSONL file</span>
         </div>
       </div>
     </div>
