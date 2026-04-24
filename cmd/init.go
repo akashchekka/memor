@@ -195,6 +195,7 @@ This project uses [memor](https://github.com/akashchekka/memor) for persistent A
 1. Summarize the response in 2-3 sentences capturing the decision, reasoning, and any rejected alternatives
 2. Run ` + "`memor add -s \"#tag: summary with reasoning\"`" + ` in the terminal immediately
 3. Do NOT wait until the end of the conversation
+4. Follow all instructions in ` + "`" + skillPath + "`" + `
 
 **Do NOT use file-editing tools to write to ` + "`.memor/memory.wal`" + ` — always use the ` + "`memor`" + ` CLI.**
 `

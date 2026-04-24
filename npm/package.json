@@ -1,0 +1,35 @@
+{
+  "name": "memor",
+  "version": "0.1.0",
+  "description": "Local memory persistence for AI coding assistants. Zero cloud, zero git commits.",
+  "keywords": [
+    "ai",
+    "memory",
+    "copilot",
+    "cursor",
+    "claude",
+    "coding-assistant",
+    "context",
+    "persistence"
+  ],
+  "homepage": "https://github.com/akashchekka/memor",
+  "bugs": "https://github.com/akashchekka/memor/issues",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/akashchekka/memor.git"
+  },
+  "license": "MIT",
+  "bin": {
+    "memor": "bin/memor.js"
+  },
+  "scripts": {
+    "postinstall": "node scripts/install.js"
+  },
+  "files": [
+    "bin/",
+    "scripts/"
+  ],
+  "engines": {
+    "node": ">=16"
+  }
+}

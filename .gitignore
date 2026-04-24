@@ -2,7 +2,8 @@
 .memor/
 
 # Github
-.github/
+.github/skills
+.github/copilot-instructions.md 
 
 # Go binary
 memor
@@ -10,6 +11,9 @@ memor.exe
 
 # Build output
 /dist/
+
+# npm binary downloads (postinstall artifacts)
+npm/bin/memor-*
 
 # IDE
 .idea/
