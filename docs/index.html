@@ -3,17 +3,36 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Memor — Memory for AI Coding Agents</title>
+  <title>Memor — Persistent Memory for AI Coding Agents</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
-  <!-- Ambient background -->
-  <div class="ambient-glow"></div>
-  <div class="grid-overlay"></div>
+  <!-- Floating memory fragments (background) -->
+  <div class="memory-fragments" aria-hidden="true">
+    <div class="fragment fragment-1"><span>@s #arch: PostgreSQL 16</span></div>
+    <div class="fragment fragment-2"><span>@p #deploy: pnpm turbo</span></div>
+    <div class="fragment fragment-3"><span>@e #fix: race condition</span></div>
+    <div class="fragment fragment-4"><span>@f #style: no any types</span></div>
+    <div class="fragment fragment-5"><span>@s #auth: OAuth2+PKCE</span></div>
+    <div class="fragment fragment-6"><span>@p #test: vitest --run</span></div>
+    <div class="fragment fragment-7"><span>@e #perf: N+1 in loader</span></div>
+    <div class="fragment fragment-8"><span>@s #db: Drizzle ORM</span></div>
+  </div>
+
+  <!-- Neural connection lines (SVG background) -->
+  <svg class="neural-bg" aria-hidden="true">
+    <defs>
+      <linearGradient id="line-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="rgba(124,92,252,0)" />
+        <stop offset="50%" stop-color="rgba(124,92,252,0.15)" />
+        <stop offset="100%" stop-color="rgba(124,92,252,0)" />
+      </linearGradient>
+    </defs>
+  </svg>
 
   <!-- Nav -->
   <nav class="nav">
@@ -22,7 +41,8 @@
         <span class="logo-icon">◈</span> memor
       </a>
       <div class="nav-links">
-        <a href="#how-it-works">How It Works</a>
+        <a href="#diagnosis">The Problem</a>
+        <a href="#architecture">Architecture</a>
         <a href="#savings">Savings</a>
         <a href="#memory-types">Memory Types</a>
         <a href="#cli">CLI</a>
@@ -33,103 +53,106 @@
 
   <!-- Hero -->
   <section class="hero">
-    <div class="hero-badge">Local-first &middot; Zero cloud &middot; Sub-ms retrieval</div>
-    <h1>Your AI agent<br><span class="gradient-text">remembers everything.</span></h1>
+    <div class="hero-badge">
+      <span class="pulse-dot"></span>
+      Local-first &middot; Zero cloud &middot; Sub-ms retrieval
+    </div>
+    <h1>The cure for<br>AI agent <span class="glitch-text" data-text="amnesia">amnesia</span></h1>
     <p class="hero-sub">
-      Every AI coding tool starts every conversation cold. Memor gives agents persistent, 
-      project-scoped memory — so they never forget your decisions, conventions, or past fixes.
+      Every AI coding agent starts every conversation cold — no memory of your decisions,
+      conventions, or past fixes. <strong>Memor changes that.</strong>
     </p>
     <div class="hero-actions">
-      <a href="https://github.com/akashchekka/memor#quick-start" class="btn btn-primary" target="_blank" rel="noopener">Get Started</a>
+      <a href="https://github.com/akashchekka/memor#quick-start" class="btn btn-primary" target="_blank" rel="noopener">
+        <span class="btn-icon">▸</span> Get Started
+      </a>
       <div class="hero-install">
+        <span class="install-label">$</span>
         <code>npm i -g @memor-dev/memor</code>
+        <button class="copy-hint" title="Copy to clipboard" aria-label="Copy install command">⎘</button>
       </div>
     </div>
 
-    <!-- Terminal demo -->
-    <div class="terminal">
-      <div class="terminal-bar">
-        <span class="terminal-dot red"></span>
-        <span class="terminal-dot yellow"></span>
-        <span class="terminal-dot green"></span>
-        <span class="terminal-title">memor</span>
-      </div>
-      <div class="terminal-body">
-        <div class="terminal-line"><span class="prompt">$</span> memor init</div>
-        <div class="terminal-line dim">✓ Created .memor/ directory</div>
-        <div class="terminal-line dim">✓ Injected copilot-instructions.md</div>
-        <div class="terminal-line dim">✓ Added SKILL.md for AI tools</div>
-        <div class="terminal-line dim">✓ Installed pre-commit hook</div>
-        <div class="terminal-line"><span class="prompt">$</span> memor add -s "#arch: PostgreSQL 16 with Drizzle ORM"</div>
-        <div class="terminal-line dim">Added semantic memory [0a3f9c2b]</div>
-        <div class="terminal-line"><span class="prompt">$</span> memor context --budget 10000</div>
-        <div class="terminal-line dim">
-          <span class="tag">@s</span> #arch: PostgreSQL 16 with Drizzle ORM<br>
-          <span class="tag">@p</span> #deploy: pnpm turbo deploy --filter=@app/api<br>
-          <span class="tag">@e</span> #fix: N+1 query in dashboard loader
-        </div>
-        <div class="terminal-line"><span class="cursor-blink">█</span></div>
-      </div>
-    </div>
   </section>
 
-  <!-- Problem / Solution -->
-  <section class="section" id="how-it-works">
+  <!-- Diagnosis: The Amnesia Problem -->
+  <section class="section" id="diagnosis">
     <div class="section-inner">
-      <h2 class="section-title">The problem with AI agents today</h2>
-      <div class="problem-grid">
-        <div class="problem-card">
-          <div class="problem-icon">🔄</div>
-          <h3>Repeated explanations</h3>
-          <p>You re-explain your project setup, conventions, and decisions at the start of every conversation.</p>
+      <div class="section-eyebrow">The Problem</div>
+      <h2 class="section-title">Every conversation starts at <span class="gradient-text">zero</span></h2>
+      <p class="section-subtitle">Every AI coding tool suffers from the same condition. Every conversation starts at zero.</p>
+
+      <div class="symptom-grid">
+        <div class="symptom-card">
+          <div class="symptom-number">01</div>
+          <div class="symptom-content">
+            <h3>Repetitive context loading</h3>
+            <p>You re-explain your stack, conventions, and decisions at the start of every single conversation.</p>
+          </div>
         </div>
-        <div class="problem-card">
-          <div class="problem-icon">💸</div>
-          <h3>Wasted tokens</h3>
-          <p>Redundant context burns through your token budget with information the AI already learned yesterday.</p>
+        <div class="symptom-card">
+          <div class="symptom-number">02</div>
+          <div class="symptom-content">
+            <h3>Token hemorrhage</h3>
+            <p>Redundant context burns through your token budget — paying for the same information over and over.</p>
+          </div>
         </div>
-        <div class="problem-card">
-          <div class="problem-icon">🎯</div>
-          <h3>Inconsistent outputs</h3>
-          <p>Without memory, the AI gives conflicting suggestions across sessions — different patterns, different approaches.</p>
+        <div class="symptom-card">
+          <div class="symptom-number">03</div>
+          <div class="symptom-content">
+            <h3>Contradictory suggestions</h3>
+            <p>Monday's AI says use pattern A. Tuesday's AI says pattern B. No consistency across sessions.</p>
+          </div>
         </div>
-        <div class="problem-card">
-          <div class="problem-icon">🧠</div>
-          <h3>Context amnesia</h3>
-          <p>Yesterday's debugging session, last week's architecture decision — all gone when a new chat starts.</p>
+        <div class="symptom-card">
+          <div class="symptom-number">04</div>
+          <div class="symptom-content">
+            <h3>Forgotten fixes</h3>
+            <p>Yesterday's bug fix, last week's architecture decision — the AI has no idea any of it happened.</p>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Architecture / How it works -->
-  <section class="section section-dark">
+  <!-- Architecture: The Full Picture -->
+  <section class="section section-dark" id="architecture">
     <div class="section-inner">
+      <div class="section-eyebrow">Architecture</div>
       <h2 class="section-title">How Memor works</h2>
-      <p class="section-subtitle">An LSM-tree-inspired architecture designed for instant writes and ranked reads.</p>
+      <p class="section-subtitle">An LSM-tree-inspired pipeline: instant writes, ranked reads, sub-millisecond retrieval.</p>
 
-      <div class="arch-flow">
+      <!-- Featured architecture diagram -->
+      <div class="arch-diagram">
+        <img src="../assets/memor.png" alt="Memor architecture — from AI coding assistants through WAL, compaction engine, trigram+BM25 indexing, to compact snapshot" loading="lazy">
+      </div>
+
+      <div class="arch-steps">
         <div class="arch-step">
-          <div class="arch-number">01</div>
+          <div class="step-icon write-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          </div>
           <div class="arch-content">
-            <h3>Write</h3>
-            <p>AI tools append memories as JSONL to <code>memory.wal</code> — fast, append-only, crash-safe. No coordination needed.</p>
+            <h3>Write <span class="latency">&lt; 5ms</span></h3>
+            <p>AI tools append memories as JSONL to <code>memory.wal</code> — append-only, crash-safe, no coordination.</p>
           </div>
         </div>
-        <div class="arch-connector"></div>
         <div class="arch-step">
-          <div class="arch-number">02</div>
+          <div class="step-icon compact-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 14h6m-6-4h16M4 18h16M4 6h16"/></svg>
+          </div>
           <div class="arch-content">
-            <h3>Compact</h3>
-            <p>Merges WAL into <code>memory.db</code>, deduplicates via SHA-256, scores by relevance, enforces token budget.</p>
+            <h3>Compact <span class="latency">on-demand</span></h3>
+            <p>Merges WAL into <code>memory.db</code> — SHA-256 dedup, relevance scoring, token budget enforcement.</p>
           </div>
         </div>
-        <div class="arch-connector"></div>
         <div class="arch-step">
-          <div class="arch-number">03</div>
+          <div class="step-icon read-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          </div>
           <div class="arch-content">
-            <h3>Read</h3>
-            <p><code>memor context</code> retrieves the most relevant memories within budget — trigram index + BM25 ranking, sub-millisecond.</p>
+            <h3>Read <span class="latency">&lt; 1ms</span></h3>
+            <p><code>memor context</code> retrieves ranked memories within budget — trigram index + BM25, sub-millisecond.</p>
           </div>
         </div>
       </div>
@@ -158,31 +181,23 @@
   <!-- Savings -->
   <section class="section" id="savings">
     <div class="section-inner">
-      <h2 class="section-title">The ROI is <span class="gradient-text">developer time</span></h2>
-      <p class="section-subtitle">Token savings are real, but the true value is eliminating the context-setting tax.</p>
+      <div class="section-eyebrow">ROI</div>
+      <h2 class="section-title">The real savings are <span class="gradient-text">developer hours</span></h2>
+      <p class="section-subtitle">Token savings are real, but developer time savings are 100x larger.</p>
 
       <div class="savings-grid">
         <div class="savings-card highlight">
-          <div class="savings-amount">5–10 hrs</div>
+          <div class="savings-icon">⏱</div>
+          <div class="savings-amount">5 - 10 hrs</div>
           <div class="savings-period">saved per developer / month</div>
-          <div class="savings-detail">No re-explaining. No repeated mistakes. Consistent AI output from conversation to conversation.</div>
+          <div class="savings-detail">~10 conversations/day x 2 - 5 min of context-setting saved each = 5-10 hrs/month per developer.</div>
         </div>
         <div class="savings-card">
-          <div class="savings-amount">$3,750–$7,500</div>
-          <div class="savings-period">saved per 10-person team / month</div>
-          <div class="savings-detail">Productivity gains at $75/hr average developer cost. Compound savings as team grows.</div>
+          <div class="savings-icon">⚡</div>
+          <div class="savings-amount">$3,750 - $7,500</div>
+          <div class="savings-period">saved per 10-dev team / month</div>
+          <div class="savings-detail">10 devs x 5-10 hrs saved in productivity gains. Based on Claude Opus 4 (1M context) pricing.</div>
         </div>
-        <div class="savings-card">
-          <div class="savings-amount">~$12</div>
-          <div class="savings-period">token savings per dev / month</div>
-          <div class="savings-detail">Prompt caching makes memory injection nearly free after the first turn ($0.50/MTok cache read).</div>
-        </div>
-      </div>
-
-      <div class="savings-quote">
-        <blockquote>
-          "Developer time savings are <strong>100×</strong> larger than token savings. Memor removes the tax you pay at the start of every AI conversation."
-        </blockquote>
       </div>
     </div>
   </section>
@@ -190,22 +205,25 @@
   <!-- Memory Types -->
   <section class="section section-dark" id="memory-types">
     <div class="section-inner">
+      <div class="section-eyebrow">Cognitive Model</div>
       <h2 class="section-title">Four types of memory</h2>
-      <p class="section-subtitle">Each type has its own lifecycle, compaction weight, and decay behavior.</p>
+      <p class="section-subtitle">Inspired by human cognitive memory — each type has its own lifecycle and decay behavior.</p>
 
       <div class="memory-grid">
         <div class="memory-card semantic">
           <div class="memory-prefix">@s</div>
           <h3>Semantic</h3>
           <p>Facts, decisions, architecture choices. The backbone of project knowledge.</p>
+          <div class="memory-meta">Weight: 1.0 &middot; Decay: slow</div>
           <div class="memory-example">
             <code>@s #auth: OAuth2+PKCE via Auth0</code>
           </div>
         </div>
         <div class="memory-card episodic">
-          <h3>Episodic</h3>
           <div class="memory-prefix">@e</div>
-          <p>Events and bugs fixed. Decays over time — lowest compaction weight, archived after 90 days.</p>
+          <h3>Episodic</h3>
+          <p>Events and bugs fixed. Fades over time — archived after 90 days.</p>
+          <div class="memory-meta">Weight: 0.5 &middot; Decay: fast</div>
           <div class="memory-example">
             <code>@e #fix: N+1 query in dashboard loader</code>
           </div>
@@ -213,7 +231,8 @@
         <div class="memory-card procedural">
           <div class="memory-prefix">@p</div>
           <h3>Procedural</h3>
-          <p>Commands, workflows, how-tos. The recipes your AI needs to execute tasks correctly.</p>
+          <p>Commands, workflows, how-tos. The recipes agents need to execute correctly.</p>
+          <div class="memory-meta">Weight: 0.8 &middot; Decay: medium</div>
           <div class="memory-example">
             <code>@p #deploy: pnpm turbo deploy --filter=api</code>
           </div>
@@ -221,7 +240,8 @@
         <div class="memory-card preference">
           <div class="memory-prefix">@f</div>
           <h3>Preference</h3>
-          <p>Style conventions and developer preferences. Permanent — never decays or gets archived.</p>
+          <p>Style conventions and developer preferences. Permanent — never archived.</p>
+          <div class="memory-meta">Weight: 0.9 &middot; Decay: none</div>
           <div class="memory-example">
             <code>@f #ts: No any, use unknown + type guards</code>
           </div>
@@ -233,6 +253,7 @@
   <!-- CLI Reference -->
   <section class="section" id="cli">
     <div class="section-inner">
+      <div class="section-eyebrow">Interface</div>
       <h2 class="section-title">Full CLI, zero friction</h2>
       <p class="section-subtitle">Everything runs locally. No daemon, no background processes, no git commits.</p>
 
@@ -276,8 +297,9 @@
   <!-- Compatibility -->
   <section class="section section-dark">
     <div class="section-inner">
-      <h2 class="section-title">Works with every AI tool</h2>
-      <p class="section-subtitle">One memory store, every agent. No vendor lock-in.</p>
+      <div class="section-eyebrow">Compatibility</div>
+      <h2 class="section-title">One memory, every agent</h2>
+      <p class="section-subtitle">No vendor lock-in. Memor works with any AI coding tool.</p>
 
       <div class="tools-grid">
         <div class="tool-badge">GitHub Copilot</div>
@@ -293,11 +315,14 @@
   <!-- CTA -->
   <section class="section cta-section">
     <div class="section-inner">
-      <h2 class="cta-title">Give your agent a memory.</h2>
-      <p class="cta-sub">Five files per project. Full indexing engine. Zero cloud.</p>
+      <h2 class="cta-title"><span class="gradient-text">Give your agent a memory.</span></h2>
+      <p class="cta-sub">Five files per project. Full indexing engine. Zero cloud. Zero config.</p>
       <div class="hero-actions">
-        <a href="https://github.com/akashchekka/memor" class="btn btn-primary" target="_blank" rel="noopener">View on GitHub</a>
+        <a href="https://github.com/akashchekka/memor" class="btn btn-primary" target="_blank" rel="noopener">
+          <span class="btn-icon">▸</span> View on GitHub
+        </a>
         <div class="hero-install">
+          <span class="install-label">$</span>
           <code>npm i -g @memor-dev/memor</code>
         </div>
       </div>
@@ -308,7 +333,7 @@
   <footer class="footer">
     <div class="footer-inner">
       <span class="footer-logo"><span class="logo-icon">◈</span> memor</span>
-      <span class="footer-text">Local memory persistence for AI coding agents</span>
+      <span class="footer-text">Persistent memory for AI coding agents</span>
       <div class="footer-links">
         <a href="https://github.com/akashchekka/memor" target="_blank" rel="noopener">GitHub</a>
         <a href="https://www.npmjs.com/package/@memor-dev/memor" target="_blank" rel="noopener">npm</a>
