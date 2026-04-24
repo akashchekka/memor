@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memor — Memory for AI Coding Agents</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Ambient background -->
+  <div class="ambient-glow"></div>
+  <div class="grid-overlay"></div>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="nav-logo">
+        <span class="logo-icon">◈</span> memor
+      </a>
+      <div class="nav-links">
+        <a href="#how-it-works">How It Works</a>
+        <a href="#savings">Savings</a>
+        <a href="#memory-types">Memory Types</a>
+        <a href="#cli">CLI</a>
+        <a href="https://github.com/akashchekka/memor" class="btn btn-sm" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">Local-first &middot; Zero cloud &middot; Sub-ms retrieval</div>
+    <h1>Your AI agent<br><span class="gradient-text">remembers everything.</span></h1>
+    <p class="hero-sub">
+      Every AI coding tool starts every conversation cold. Memor gives agents persistent, 
+      project-scoped memory — so they never forget your decisions, conventions, or past fixes.
+    </p>
+    <div class="hero-actions">
+      <a href="https://github.com/akashchekka/memor#quick-start" class="btn btn-primary" target="_blank" rel="noopener">Get Started</a>
+      <div class="hero-install">
+        <code>npm i -g @memor-dev/memor</code>
+      </div>
+    </div>
+
+    <!-- Terminal demo -->
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="terminal-dot red"></span>
+        <span class="terminal-dot yellow"></span>
+        <span class="terminal-dot green"></span>
+        <span class="terminal-title">memor</span>
+      </div>
+      <div class="terminal-body">
+        <div class="terminal-line"><span class="prompt">$</span> memor init</div>
+        <div class="terminal-line dim">✓ Created .memor/ directory</div>
+        <div class="terminal-line dim">✓ Injected copilot-instructions.md</div>
+        <div class="terminal-line dim">✓ Added SKILL.md for AI tools</div>
+        <div class="terminal-line dim">✓ Installed pre-commit hook</div>
+        <div class="terminal-line"><span class="prompt">$</span> memor add -s "#arch: PostgreSQL 16 with Drizzle ORM"</div>
+        <div class="terminal-line dim">Added semantic memory [0a3f9c2b]</div>
+        <div class="terminal-line"><span class="prompt">$</span> memor context --budget 10000</div>
+        <div class="terminal-line dim">
+          <span class="tag">@s</span> #arch: PostgreSQL 16 with Drizzle ORM<br>
+          <span class="tag">@p</span> #deploy: pnpm turbo deploy --filter=@app/api<br>
+          <span class="tag">@e</span> #fix: N+1 query in dashboard loader
+        </div>
+        <div class="terminal-line"><span class="cursor-blink">█</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Problem / Solution -->
+  <section class="section" id="how-it-works">
+    <div class="section-inner">
+      <h2 class="section-title">The problem with AI agents today</h2>
+      <div class="problem-grid">
+        <div class="problem-card">
+          <div class="problem-icon">🔄</div>
+          <h3>Repeated explanations</h3>
+          <p>You re-explain your project setup, conventions, and decisions at the start of every conversation.</p>
+        </div>
+        <div class="problem-card">
+          <div class="problem-icon">💸</div>
+          <h3>Wasted tokens</h3>
+          <p>Redundant context burns through your token budget with information the AI already learned yesterday.</p>
+        </div>
+        <div class="problem-card">
+          <div class="problem-icon">🎯</div>
+          <h3>Inconsistent outputs</h3>
+          <p>Without memory, the AI gives conflicting suggestions across sessions — different patterns, different approaches.</p>
+        </div>
+        <div class="problem-card">
+          <div class="problem-icon">🧠</div>
+          <h3>Context amnesia</h3>
+          <p>Yesterday's debugging session, last week's architecture decision — all gone when a new chat starts.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Architecture / How it works -->
+  <section class="section section-dark">
+    <div class="section-inner">
+      <h2 class="section-title">How Memor works</h2>
+      <p class="section-subtitle">An LSM-tree-inspired architecture designed for instant writes and ranked reads.</p>
+
+      <div class="arch-flow">
+        <div class="arch-step">
+          <div class="arch-number">01</div>
+          <div class="arch-content">
+            <h3>Write</h3>
+            <p>AI tools append memories as JSONL to <code>memory.wal</code> — fast, append-only, crash-safe. No coordination needed.</p>
+          </div>
+        </div>
+        <div class="arch-connector"></div>
+        <div class="arch-step">
+          <div class="arch-number">02</div>
+          <div class="arch-content">
+            <h3>Compact</h3>
+            <p>Merges WAL into <code>memory.db</code>, deduplicates via SHA-256, scores by relevance, enforces token budget.</p>
+          </div>
+        </div>
+        <div class="arch-connector"></div>
+        <div class="arch-step">
+          <div class="arch-number">03</div>
+          <div class="arch-content">
+            <h3>Read</h3>
+            <p><code>memor context</code> retrieves the most relevant memories within budget — trigram index + BM25 ranking, sub-millisecond.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch-stats">
+        <div class="stat">
+          <div class="stat-value">&lt; 200 KB</div>
+          <div class="stat-label">Per-project footprint</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">&lt; 1 ms</div>
+          <div class="stat-label">Retrieval latency</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">51%</div>
+          <div class="stat-label">Fewer tokens vs Markdown</div>
+        </div>
+        <div class="stat">
+          <div class="stat-value">0</div>
+          <div class="stat-label">Cloud dependencies</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Savings -->
+  <section class="section" id="savings">
+    <div class="section-inner">
+      <h2 class="section-title">The ROI is <span class="gradient-text">developer time</span></h2>
+      <p class="section-subtitle">Token savings are real, but the true value is eliminating the context-setting tax.</p>
+
+      <div class="savings-grid">
+        <div class="savings-card highlight">
+          <div class="savings-amount">5–10 hrs</div>
+          <div class="savings-period">saved per developer / month</div>
+          <div class="savings-detail">No re-explaining. No repeated mistakes. Consistent AI output from conversation to conversation.</div>
+        </div>
+        <div class="savings-card">
+          <div class="savings-amount">$3,750–$7,500</div>
+          <div class="savings-period">saved per 10-person team / month</div>
+          <div class="savings-detail">Productivity gains at $75/hr average developer cost. Compound savings as team grows.</div>
+        </div>
+        <div class="savings-card">
+          <div class="savings-amount">~$12</div>
+          <div class="savings-period">token savings per dev / month</div>
+          <div class="savings-detail">Prompt caching makes memory injection nearly free after the first turn ($0.50/MTok cache read).</div>
+        </div>
+      </div>
+
+      <div class="savings-quote">
+        <blockquote>
+          "Developer time savings are <strong>100×</strong> larger than token savings. Memor removes the tax you pay at the start of every AI conversation."
+        </blockquote>
+      </div>
+    </div>
+  </section>
+
+  <!-- Memory Types -->
+  <section class="section section-dark" id="memory-types">
+    <div class="section-inner">
+      <h2 class="section-title">Four types of memory</h2>
+      <p class="section-subtitle">Each type has its own lifecycle, compaction weight, and decay behavior.</p>
+
+      <div class="memory-grid">
+        <div class="memory-card semantic">
+          <div class="memory-prefix">@s</div>
+          <h3>Semantic</h3>
+          <p>Facts, decisions, architecture choices. The backbone of project knowledge.</p>
+          <div class="memory-example">
+            <code>@s #auth: OAuth2+PKCE via Auth0</code>
+          </div>
+        </div>
+        <div class="memory-card episodic">
+          <h3>Episodic</h3>
+          <div class="memory-prefix">@e</div>
+          <p>Events and bugs fixed. Decays over time — lowest compaction weight, archived after 90 days.</p>
+          <div class="memory-example">
+            <code>@e #fix: N+1 query in dashboard loader</code>
+          </div>
+        </div>
+        <div class="memory-card procedural">
+          <div class="memory-prefix">@p</div>
+          <h3>Procedural</h3>
+          <p>Commands, workflows, how-tos. The recipes your AI needs to execute tasks correctly.</p>
+          <div class="memory-example">
+            <code>@p #deploy: pnpm turbo deploy --filter=api</code>
+          </div>
+        </div>
+        <div class="memory-card preference">
+          <div class="memory-prefix">@f</div>
+          <h3>Preference</h3>
+          <p>Style conventions and developer preferences. Permanent — never decays or gets archived.</p>
+          <div class="memory-example">
+            <code>@f #ts: No any, use unknown + type guards</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CLI Reference -->
+  <section class="section" id="cli">
+    <div class="section-inner">
+      <h2 class="section-title">Full CLI, zero friction</h2>
+      <p class="section-subtitle">Everything runs locally. No daemon, no background processes, no git commits.</p>
+
+      <div class="cli-grid">
+        <div class="cli-item">
+          <code class="cli-cmd">memor init</code>
+          <span class="cli-desc">Set up .memor/ with hooks and skill files</span>
+        </div>
+        <div class="cli-item">
+          <code class="cli-cmd">memor add</code>
+          <span class="cli-desc">Append a new memory to the WAL</span>
+        </div>
+        <div class="cli-item">
+          <code class="cli-cmd">memor context</code>
+          <span class="cli-desc">Get ranked context within token budget</span>
+        </div>
+        <div class="cli-item">
+          <code class="cli-cmd">memor search &lt;query&gt;</code>
+          <span class="cli-desc">Full-text search with trigram + BM25</span>
+        </div>
+        <div class="cli-item">
+          <code class="cli-cmd">memor compact</code>
+          <span class="cli-desc">Merge WAL into snapshot, deduplicate</span>
+        </div>
+        <div class="cli-item">
+          <code class="cli-cmd">memor stats</code>
+          <span class="cli-desc">Entry counts, token usage, index health</span>
+        </div>
+        <div class="cli-item">
+          <code class="cli-cmd">memor reinforce &lt;id&gt;</code>
+          <span class="cli-desc">Boost relevance of a useful memory</span>
+        </div>
+        <div class="cli-item">
+          <code class="cli-cmd">memor knowledge add</code>
+          <span class="cli-desc">Index a document into the knowledge base</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Compatibility -->
+  <section class="section section-dark">
+    <div class="section-inner">
+      <h2 class="section-title">Works with every AI tool</h2>
+      <p class="section-subtitle">One memory store, every agent. No vendor lock-in.</p>
+
+      <div class="tools-grid">
+        <div class="tool-badge">GitHub Copilot</div>
+        <div class="tool-badge">Claude Code</div>
+        <div class="tool-badge">Cursor</div>
+        <div class="tool-badge">Windsurf</div>
+        <div class="tool-badge">Aider</div>
+        <div class="tool-badge">Any MCP Client</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="section cta-section">
+    <div class="section-inner">
+      <h2 class="cta-title">Give your agent a memory.</h2>
+      <p class="cta-sub">Five files per project. Full indexing engine. Zero cloud.</p>
+      <div class="hero-actions">
+        <a href="https://github.com/akashchekka/memor" class="btn btn-primary" target="_blank" rel="noopener">View on GitHub</a>
+        <div class="hero-install">
+          <code>npm i -g @memor-dev/memor</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <span class="footer-logo"><span class="logo-icon">◈</span> memor</span>
+      <span class="footer-text">Local memory persistence for AI coding agents</span>
+      <div class="footer-links">
+        <a href="https://github.com/akashchekka/memor" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://www.npmjs.com/package/@memor-dev/memor" target="_blank" rel="noopener">npm</a>
+        <a href="https://github.com/akashchekka/memor/blob/main/LICENSE" target="_blank" rel="noopener">MIT License</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
