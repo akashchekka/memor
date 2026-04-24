@@ -27,7 +27,11 @@ var headerRegex = regexp.MustCompile(
 )
 
 var entryRegex = regexp.MustCompile(
-	`^(@[sepf])\s+((?:#\S+\s*)+):\s+(.+?)\s+\[([^\]]+)\]$`,
+	`^(@[sepfc])\s+((?:#\S+\s*)+):\s+(.+?)\s+\[([^\]]+)\]$`,
+)
+
+var codeEntryRegex = regexp.MustCompile(
+	`^@c\s+(\S+)\s+\[(\d+)\s+LOC\s+\|\s+([a-f0-9]+)\]$`,
 )
 
 // ReadSnapshot parses memory.db from the compact DSL format.
@@ -55,10 +59,70 @@ func ReadSnapshot(path string) (*Snapshot, error) {
 		}
 	}
 
-	// Parse entries
+	// Collect all remaining lines
+	var allLines []string
 	for scanner.Scan() {
-		line := strings.TrimSpace(scanner.Text())
+		allLines = append(allLines, scanner.Text())
+	}
+
+	// Parse entries from lines
+	for i := 0; i < len(allLines); i++ {
+		line := strings.TrimSpace(allLines[i])
 		if line == "" {
+			continue
+		}
+
+		// Check for @c (code) multi-line entries
+		if cm := codeEntryRegex.FindStringSubmatch(line); cm != nil {
+			filePath := cm[1]
+			loc := 0
+			fmt.Sscanf(cm[2], "%d", &loc)
+			hash := cm[3]
+
+			meta := &memory.CodeMeta{
+				FilePath: filePath,
+				LOC:      loc,
+				Hash:     hash,
+			}
+
+			// Read continuation lines (indented with "  key: value")
+			for i+1 < len(allLines) && strings.HasPrefix(allLines[i+1], "  ") {
+				i++
+				sub := strings.TrimSpace(allLines[i])
+				if kv := strings.SplitN(sub, ": ", 2); len(kv) == 2 {
+					switch kv[0] {
+					case "exports":
+						for _, e := range strings.Split(kv[1], ", ") {
+							e = strings.TrimSpace(e)
+							if e != "" {
+								meta.Exports = append(meta.Exports, e)
+							}
+						}
+					case "deps":
+						for _, d := range strings.Split(kv[1], ", ") {
+							d = strings.TrimSpace(d)
+							if d != "" {
+								meta.Deps = append(meta.Deps, d)
+							}
+						}
+					case "summary":
+						meta.Summary = kv[1]
+					case "patterns":
+						meta.Patterns = kv[1]
+					case "logic":
+						meta.Logic = kv[1]
+					}
+				}
+			}
+
+			entry := memory.Entry{
+				Type:      memory.TypeCode,
+				Content:   filePath,
+				ID:        memory.ContentID(filePath),
+				Timestamp: time.Now().Unix(),
+				Meta:      meta,
+			}
+			snap.Entries = append(snap.Entries, entry)
 			continue
 		}
 
@@ -144,12 +208,38 @@ func WriteSnapshot(path string, entries []memory.Entry, budget int) error {
 	return os.WriteFile(path, []byte(sb.String()), 0o644)
 }
 
-// renderEntry formats a single entry as a compact DSL line.
+// renderEntry formats a single entry as a compact DSL line (or multi-line block for @c).
 func renderEntry(e memory.Entry) string {
+	if e.Type == memory.TypeCode && e.Meta != nil {
+		return renderCodeSnapshotEntry(e)
+	}
 	prefix := e.Type.Prefix()
 	tags := renderTags(e.Tags)
 	datestamp := formatDatestamp(e)
 	return fmt.Sprintf("%s %s: %s [%s]", prefix, tags, e.Content, datestamp)
+}
+
+// renderCodeSnapshotEntry formats a @c entry as a multi-line block for the snapshot.
+func renderCodeSnapshotEntry(e memory.Entry) string {
+	m := e.Meta
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("@c %s [%d LOC | %s]", m.FilePath, m.LOC, m.Hash))
+	if len(m.Exports) > 0 {
+		sb.WriteString(fmt.Sprintf("\n  exports: %s", strings.Join(m.Exports, ", ")))
+	}
+	if len(m.Deps) > 0 {
+		sb.WriteString(fmt.Sprintf("\n  deps: %s", strings.Join(m.Deps, ", ")))
+	}
+	if m.Summary != "" {
+		sb.WriteString(fmt.Sprintf("\n  summary: %s", m.Summary))
+	}
+	if m.Patterns != "" {
+		sb.WriteString(fmt.Sprintf("\n  patterns: %s", m.Patterns))
+	}
+	if m.Logic != "" {
+		sb.WriteString(fmt.Sprintf("\n  logic: %s", m.Logic))
+	}
+	return sb.String()
 }
 
 func formatDatestamp(e memory.Entry) string {
@@ -191,6 +281,8 @@ func prefixToType(prefix string) memory.Type {
 		return memory.TypeProcedural
 	case "@f":
 		return memory.TypePreference
+	case "@c":
+		return memory.TypeCode
 	default:
 		return memory.TypeSemantic
 	}

@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/memor-dev/memor/internal/constants"
 	toml "github.com/pelletier/go-toml/v2"
 )
 
@@ -38,6 +39,7 @@ type CompactionTypeWeights struct {
 	Semantic   float64 `toml:"semantic"`
 	Procedural float64 `toml:"procedural"`
 	Episodic   float64 `toml:"episodic"`
+	Code       float64 `toml:"code"`
 }
 
 // DecayConfig controls time-based decay for episodic entries.
@@ -64,23 +66,24 @@ func Default() Config {
 	return Config{
 		Memory: MemoryConfig{
 			SchemaVersion:    "1.0",
-			TokenBudget:      10000,
-			WALMaxEntries:    100,
-			ArchiveAfterDays: 90,
+			TokenBudget:      constants.DefaultTokenBudget,
+			WALMaxEntries:    constants.DefaultWALMaxEntries,
+			ArchiveAfterDays: constants.DefaultArchiveAfterDays,
 		},
 		Compaction: CompactionConfig{
 			Strategy:      "relevance_scored",
 			PreserveTypes: []string{"semantic", "procedural", "preference"},
 			DecayTypes:    []string{"episodic"},
 			TypeWeights: CompactionTypeWeights{
-				Preference: 1.0,
-				Semantic:   0.9,
-				Procedural: 0.8,
-				Episodic:   0.5,
+				Preference: constants.WeightPreference,
+				Semantic:   constants.WeightSemantic,
+				Procedural: constants.WeightProcedural,
+				Code:       constants.WeightCode,
+				Episodic:   constants.WeightEpisodic,
 			},
 			Decay: DecayConfig{
-				Rate:     0.03,
-				MinScore: 0.1,
+				Rate:     constants.DefaultDecayRate,
+				MinScore: constants.DefaultDecayMinScore,
 			},
 		},
 		Knowledge: KnowledgeConfig{
@@ -148,6 +151,8 @@ func (c *Config) TypeWeight(t string) float64 {
 		return c.Compaction.TypeWeights.Procedural
 	case "f", "preference":
 		return c.Compaction.TypeWeights.Preference
+	case "c", "code":
+		return c.Compaction.TypeWeights.Code
 	default:
 		return 0.5
 	}

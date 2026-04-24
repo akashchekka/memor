@@ -4,11 +4,7 @@ import (
 	"os"
 
 	"github.com/bits-and-blooms/bloom/v3"
-)
-
-const (
-	bloomExpectedItems = 10000
-	bloomFPRate        = 0.01
+	"github.com/memor-dev/memor/internal/constants"
 )
 
 // BloomIndex wraps a Bloom filter for fast negative lookups.
@@ -19,7 +15,7 @@ type BloomIndex struct {
 // NewBloomIndex creates a fresh Bloom filter sized for the expected item count.
 func NewBloomIndex() *BloomIndex {
 	return &BloomIndex{
-		filter: bloom.NewWithEstimates(bloomExpectedItems, bloomFPRate),
+		filter: bloom.NewWithEstimates(constants.BloomExpectedItems, constants.BloomFPRate),
 	}
 }
 
@@ -57,13 +53,13 @@ func (b *BloomIndex) Load(path string) error {
 	f, err := os.Open(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			b.filter = bloom.NewWithEstimates(bloomExpectedItems, bloomFPRate)
+			b.filter = bloom.NewWithEstimates(constants.BloomExpectedItems, constants.BloomFPRate)
 			return nil
 		}
 		return err
 	}
 	defer f.Close()
-	b.filter = bloom.NewWithEstimates(bloomExpectedItems, bloomFPRate)
+	b.filter = bloom.NewWithEstimates(constants.BloomExpectedItems, constants.BloomFPRate)
 	_, err = b.filter.ReadFrom(f)
 	return err
 }

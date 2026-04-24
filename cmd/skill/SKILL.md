@@ -51,6 +51,7 @@ Do NOT use for: storing secrets, API keys, passwords, or PII.
 | `@e` | Episodic | Events, bugs fixed, migrations done |
 | `@p` | Procedural | How-to, commands, workflows |
 | `@f` | Preference | Developer style preferences (permanent) |
+| `@c` | Code | Structured file summaries (exports, deps, logic) |
 
 ### Tags
 
@@ -97,6 +98,37 @@ Write **2-3 sentences** that capture the decision, the reasoning, and any reject
 | "The bug was...", "Fixed by...", "Migrated..." | episodic | `memor add --type episodic -s "#perf #db: Fixed N+1 in dashboard loader by adding .with() joins on user->orders relation. Root cause was lazy loading defaults in Drizzle — always use explicit joins for list endpoints."` |
 | "To do X, run...", "Deploy by..." | procedural | `memor add --type procedural -s "#deploy: pnpm turbo deploy --filter=@app/api. Requires AWS_PROFILE=prod set first. Deploys to us-east-1 Lambda via SST."` |
 | "I prefer...", "Always use...", "Never use..." | preference | `memor add --type preference -s "#typescript: No any types, use unknown + type guards. Enforced by eslint rule @typescript-eslint/no-explicit-any."` |
+
+---
+
+## Code Summaries
+
+Memor supports structured code file summaries (`@c` type) so agents can understand code without re-reading entire files.
+
+**BEFORE reading a source file**, check if a summary exists:
+```bash
+memor code load <file-path>
+```
+- If **fresh** (hash matches) → use the summary, skip reading the file
+- If **stale** (hash changed) → read the file, then update the summary
+- If **missing** → read the file, then save a summary
+
+**AFTER reading a source file for the first time**, save a summary:
+```bash
+memor code save <file-path> \
+  --exports "fn1(), fn2(), TypeA" \
+  --deps "path/to/dep1, path/to/dep2" \
+  --summary "One-line description of what the file does" \
+  --patterns "How the code is meant to be used" \
+  --logic "Step-by-step flow for complex files"
+```
+
+**AFTER writing or modifying a source file**, immediately update the summary:
+```bash
+memor code save <file-path> --exports "updated exports" --summary "updated summary"
+```
+
+This is not optional — the next agent depends on accurate code summaries.
 
 ### What NOT to Write
 
@@ -183,6 +215,13 @@ memor clean
 # Remove .memor/ entirely
 memor purge
 memor purge --all                                    # also remove injected instructions from AI tool configs
+
+# Code file summaries (structured @c entries)
+memor code save <file> --exports "..." --summary "..." # save a file summary
+memor code save <file> --logic "step → step → step"    # include logic for complex files
+memor code load <file>                                  # load summary, shows fresh/stale/missing
+memor code load --query "auth"                          # search by keyword
+memor code list                                         # list all mapped files
 ```
 
 ---

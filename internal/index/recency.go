@@ -3,9 +3,9 @@ package index
 import (
 	"encoding/json"
 	"os"
-)
 
-const recencyRingSize = 256
+	"github.com/memor-dev/memor/internal/constants"
+)
 
 // RecencyRing is a fixed-size LRU ring buffer of recently accessed entry IDs.
 type RecencyRing struct {
@@ -14,7 +14,7 @@ type RecencyRing struct {
 
 // NewRecencyRing creates an empty recency ring.
 func NewRecencyRing() *RecencyRing {
-	return &RecencyRing{IDs: make([]string, 0, recencyRingSize)}
+	return &RecencyRing{IDs: make([]string, 0, constants.RecencyRingSize)}
 }
 
 // Touch moves an ID to the front of the ring (most recent).
@@ -31,8 +31,8 @@ func (r *RecencyRing) Touch(id string) {
 	r.IDs = append([]string{id}, r.IDs...)
 
 	// Trim to max size
-	if len(r.IDs) > recencyRingSize {
-		r.IDs = r.IDs[:recencyRingSize]
+	if len(r.IDs) > constants.RecencyRingSize {
+		r.IDs = r.IDs[:constants.RecencyRingSize]
 	}
 }
 
@@ -54,7 +54,7 @@ func (r *RecencyRing) RecencyBoost(id string) float64 {
 	if pos < 0 {
 		return 0
 	}
-	return 1.0 - float64(pos)/float64(recencyRingSize)
+	return 1.0 - float64(pos)/float64(constants.RecencyRingSize)
 }
 
 // Load reads the recency ring from a JSON file.

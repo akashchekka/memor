@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/memor-dev/memor/internal/constants"
 	"github.com/memor-dev/memor/internal/store"
 	"github.com/spf13/cobra"
 )
@@ -35,7 +36,7 @@ func runClean(cmd *cobra.Command, args []string) error {
 	}
 
 	// Reset memory.db to empty snapshot
-	if err := os.WriteFile(paths.MemoryDB, []byte("@mem v1 | 0 entries | budget:10000 | compacted:none\n"), 0o644); err != nil {
+	if err := os.WriteFile(paths.MemoryDB, []byte(fmt.Sprintf("@mem v1 | 0 entries | budget:%d | compacted:none\n", constants.DefaultTokenBudget)), 0o644); err != nil {
 		return fmt.Errorf("reset memory.db: %w", err)
 	}
 	fmt.Println("Reset memory.db")

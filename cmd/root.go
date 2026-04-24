@@ -38,4 +38,5 @@ func init() {
 	rootCmd.AddCommand(knowledgeCmd)
 	rootCmd.AddCommand(purgeCmd)
 	rootCmd.AddCommand(cleanCmd)
+	rootCmd.AddCommand(codeCmd)
 }

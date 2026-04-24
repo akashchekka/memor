@@ -161,6 +161,9 @@ func sortByScore(entries []memory.ScoredEntry) {
 }
 
 func renderCompactLine(e memory.Entry) string {
+	if e.Type == memory.TypeCode && e.Meta != nil {
+		return renderCodeEntry(e)
+	}
 	prefix := e.Type.Prefix()
 	var tags []string
 	for _, t := range e.Tags {
@@ -168,6 +171,29 @@ func renderCompactLine(e memory.Entry) string {
 	}
 	tagStr := strings.Join(tags, " ")
 	return fmt.Sprintf("%s %s: %s", prefix, tagStr, e.Content)
+}
+
+// renderCodeEntry formats a @c entry as a multi-line block.
+func renderCodeEntry(e memory.Entry) string {
+	m := e.Meta
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("@c %s [%d LOC | %s]", m.FilePath, m.LOC, m.Hash))
+	if len(m.Exports) > 0 {
+		sb.WriteString(fmt.Sprintf("\n  exports: %s", strings.Join(m.Exports, ", ")))
+	}
+	if len(m.Deps) > 0 {
+		sb.WriteString(fmt.Sprintf("\n  deps: %s", strings.Join(m.Deps, ", ")))
+	}
+	if m.Summary != "" {
+		sb.WriteString(fmt.Sprintf("\n  summary: %s", m.Summary))
+	}
+	if m.Patterns != "" {
+		sb.WriteString(fmt.Sprintf("\n  patterns: %s", m.Patterns))
+	}
+	if m.Logic != "" {
+		sb.WriteString(fmt.Sprintf("\n  logic: %s", m.Logic))
+	}
+	return sb.String()
 }
 
 // rebuildIndexes regenerates all index files from the given entries.

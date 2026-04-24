@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/memor-dev/memor/internal/config"
+	"github.com/memor-dev/memor/internal/constants"
 	"github.com/memor-dev/memor/internal/store"
 	"github.com/spf13/cobra"
 )
@@ -66,7 +67,7 @@ func runInit(cmd *cobra.Command, args []string) error {
 
 	// Create empty memory.db
 	if _, err := os.Stat(paths.MemoryDB); os.IsNotExist(err) {
-		if err := os.WriteFile(paths.MemoryDB, []byte("@mem v1 | 0 entries | budget:10000 | compacted:none\n"), 0o644); err != nil {
+		if err := os.WriteFile(paths.MemoryDB, []byte(fmt.Sprintf("@mem v1 | 0 entries | budget:%d | compacted:none\n", constants.DefaultTokenBudget)), 0o644); err != nil {
 			return fmt.Errorf("write memory.db: %w", err)
 		}
 		fmt.Println("Created", paths.MemoryDB)
@@ -179,7 +180,7 @@ exit 0
 	return nil
 }
 
-//go:embed skill_template.md
+//go:embed skill/SKILL.md
 var skillTemplate string
 
 func makeInstructions(skillPath string) string {
@@ -199,7 +200,11 @@ This project uses [memor](https://github.com/akashchekka/memor) for persistent A
    - Commands, workflows, how-tos: ` + "`memor add --type procedural -s \"#tag: summary\"`" + `
    - Style preferences, conventions: ` + "`memor add --type preference -s \"#tag: summary\"`" + `
 3. Do NOT wait until the end of the conversation
-4. Follow all instructions in ` + "`" + skillPath + "`" + `
+
+**After reading or writing a source file:**
+1. Save a code summary: ` + "`memor code save <file> --exports \"...\" --summary \"...\"`" + `
+2. For complex files, add logic: ` + "`memor code save <file> --logic \"step → step\"`" + `
+3. Before reading a file, check: ` + "`memor code load <file>`" + ` — skip reading if fresh
 
 **Do NOT use file-editing tools to write to ` + "`.memor/memory.wal`" + ` — always use the ` + "`memor`" + ` CLI.**
 `

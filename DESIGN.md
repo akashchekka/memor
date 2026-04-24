@@ -27,7 +27,8 @@
 19. [Tech Stack](#19-tech-stack)
 20. [Performance Budget](#20-performance-budget)
 21. [Roadmap](#21-roadmap)
-22. [Summary](#22-summary)
+22. [Can Be Explored](#22-can-be-explored)
+23. [Summary](#23-summary)
 
 ---
 
@@ -1063,7 +1064,66 @@ curl -fsSL https://github.com/memor/memor/releases/latest/download/memor-$(uname
 
 ---
 
-## 22. Summary
+## 22. Can Be Explored
+
+The following technologies and approaches are not currently used by Memor but could be explored for future optimization if the project's scale demands it.
+
+### 22.1 Gob Encoding
+
+**Gob** is Go's native binary serialization format, built into the standard library (`encoding/gob`). It encodes Go structs directly into a compact binary representation — no schema definition needed.
+
+| Aspect | Gob | JSON (current) |
+|---|---|---|
+| Format | Binary | Text |
+| Human-readable | No | Yes |
+| Parse speed | ~3–5× faster than JSON | Baseline |
+| Output size | ~30–50% smaller | Baseline |
+| Cross-language | Go only | Universal |
+| Stdlib | `encoding/gob` | `encoding/json` |
+
+**Where it could help:** Index files (`tags.json`, `recency.json`, `bloom.bin`) and the code index where human readability is less important than load speed. At 10,000+ entries, switching index serialization from JSON to Gob could shave milliseconds off every `memor context` call.
+
+**Why we don't use it today:** Memor's design principle #2 is "text-first agent interface." All primary data files (`memory.db`, `memory.wal`, `knowledge.db`) must be human-inspectable. Gob would make debugging and manual inspection impossible. Index files are already fast enough at current scale (< 1ms for hundreds of entries).
+
+**When to reconsider:** If index load times exceed 5ms, or if a binary code index is needed for projects with 1,000+ mapped files.
+
+### 22.2 BoltDB (bbolt)
+
+**BoltDB** (maintained as [bbolt](https://github.com/etcd-io/bbolt) by the etcd team) is an embedded key-value store written in pure Go. It stores data in a single file using a **B+ tree** — the same data structure that powers filesystems (NTFS, ext4) and databases (PostgreSQL, MySQL).
+
+| Aspect | BoltDB | JSON file (current) | SQLite |
+|---|---|---|---|
+| Lookup by key | O(log n) B+ tree | O(n) parse all | O(log n) B-tree |
+| Write safety | ACID transactions | Rewrite entire file | ACID transactions |
+| Concurrency | Multiple readers, single writer | No built-in safety | WAL mode concurrent reads |
+| Size overhead | ~4 KB page minimum | Zero | ~100 KB minimum |
+| Dependencies | `go.etcd.io/bbolt` | None | CGo or pure-Go port |
+| Human-readable | No (binary pages) | Yes | No |
+| Used by | etcd, Consul, InfluxDB, Loki | — | — |
+
+**How it works internally:**
+- Memory-maps a single file on disk
+- Organizes data as a B+ tree with 4 KB pages
+- Keys are sorted — range scans and prefix lookups are fast
+- Read transactions use copy-on-write (MVCC) — lock-free concurrent reads
+- No background threads, no compaction daemon, no WAL management needed
+
+**Where it could help:**
+- **Code index**: O(log n) lookup by file path instead of scanning all entries
+- **Tag index**: Fast prefix queries (`#auth*`) without loading the full tag map
+- **Replace WAL + snapshot**: BoltDB could serve as both write log and read store, eliminating the need for separate compaction — though this would fundamentally change Memor's architecture
+
+**Why we don't use it today:**
+- Adds an external dependency (Memor currently has minimal dependencies)
+- Memor's entry count (hundreds, not millions) doesn't require B+ tree performance
+- Loses human-readable files — a core design principle
+- The LSM-tree-inspired WAL + snapshot model is simpler and sufficient at current scale
+
+**When to reconsider:** If memor needs to support projects with 10,000+ entries, or if `memor code load` lookups become a bottleneck with hundreds of mapped files. BoltDB would be the natural upgrade path for the index layer while keeping `memory.db` as the human-readable output format.
+
+---
+
+## 23. Summary
 
 Memor is **five text files, a trigram index, and a CLI**. It sits in .memor/ inside your project (gitignored), learns from every conversation, indexes your skills and instructions, and gives every AI tool exactly the right context — within a token budget — at the start of every conversation.
 

@@ -4,19 +4,21 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/memor-dev/memor/internal/constants"
 )
 
 func TestDefault(t *testing.T) {
 	cfg := Default()
 
-	if cfg.Memory.TokenBudget != 10000 {
-		t.Errorf("expected token_budget 10000, got %d", cfg.Memory.TokenBudget)
+	if cfg.Memory.TokenBudget != constants.DefaultTokenBudget {
+		t.Errorf("expected token_budget %d, got %d", constants.DefaultTokenBudget, cfg.Memory.TokenBudget)
 	}
-	if cfg.Memory.WALMaxEntries != 100 {
-		t.Errorf("expected wal_max_entries 100, got %d", cfg.Memory.WALMaxEntries)
+	if cfg.Memory.WALMaxEntries != constants.DefaultWALMaxEntries {
+		t.Errorf("expected wal_max_entries %d, got %d", constants.DefaultWALMaxEntries, cfg.Memory.WALMaxEntries)
 	}
-	if cfg.Memory.ArchiveAfterDays != 90 {
-		t.Errorf("expected archive_after_days 90, got %d", cfg.Memory.ArchiveAfterDays)
+	if cfg.Memory.ArchiveAfterDays != constants.DefaultArchiveAfterDays {
+		t.Errorf("expected archive_after_days %d, got %d", constants.DefaultArchiveAfterDays, cfg.Memory.ArchiveAfterDays)
 	}
 	if cfg.Compaction.Strategy != "relevance_scored" {
 		t.Errorf("expected strategy relevance_scored, got %s", cfg.Compaction.Strategy)
@@ -66,7 +68,7 @@ func TestLoadNonexistent(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load should not error on missing file: %v", err)
 	}
-	if cfg.Memory.TokenBudget != 10000 {
+	if cfg.Memory.TokenBudget != constants.DefaultTokenBudget {
 		t.Errorf("expected default token_budget, got %d", cfg.Memory.TokenBudget)
 	}
 }
