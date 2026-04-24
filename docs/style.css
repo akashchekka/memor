@@ -123,6 +123,7 @@ body {
   left: 0;
   right: 0;
   z-index: 100;
+  -webkit-backdrop-filter: blur(24px) saturate(1.2);
   backdrop-filter: blur(24px) saturate(1.2);
   background: rgba(8, 8, 13, 0.85);
   border-bottom: 1px solid var(--border);
@@ -278,17 +279,20 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
+  overflow: hidden;
 }
 
 .glitch-text::before {
   color: var(--accent-bright);
   animation: glitch-1 3s ease-in-out infinite;
+  -webkit-clip-path: inset(20% 0 50% 0);
   clip-path: inset(20% 0 50% 0);
 }
 
 .glitch-text::after {
   color: var(--red);
   animation: glitch-2 3s ease-in-out infinite;
+  -webkit-clip-path: inset(60% 0 10% 0);
   clip-path: inset(60% 0 10% 0);
 }
 
@@ -488,6 +492,7 @@ body {
   padding: 1px;
   background: linear-gradient(135deg, rgba(124,92,252,0.3), transparent 50%, rgba(52,211,153,0.2));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
