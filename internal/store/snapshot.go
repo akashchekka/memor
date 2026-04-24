@@ -95,13 +95,12 @@ func ReadSnapshot(path string) (*Snapshot, error) {
 
 // WriteSnapshot renders entries to memory.db in compact DSL format within the token budget.
 func WriteSnapshot(path string, entries []memory.Entry, budget int) error {
-	// Sort: by type order, then within type by timestamp descending
+	// Sort: by timestamp descending (newest first), then by type order as tiebreaker
 	sort.SliceStable(entries, func(i, j int) bool {
-		ti, tj := entries[i].Type.SortOrder(), entries[j].Type.SortOrder()
-		if ti != tj {
-			return ti < tj
+		if entries[i].Timestamp != entries[j].Timestamp {
+			return entries[i].Timestamp > entries[j].Timestamp
 		}
-		return entries[i].Timestamp > entries[j].Timestamp
+		return entries[i].Type.SortOrder() < entries[j].Type.SortOrder()
 	})
 
 	now := time.Now().UTC().Format(time.RFC3339)

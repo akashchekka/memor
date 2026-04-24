@@ -74,6 +74,14 @@ func runAdd(cmd *cobra.Command, args []string) error {
 			return err
 		}
 		entry = parsed
+		// Apply --type flag if explicitly set (overrides default semantic)
+		if cmd.Flags().Changed("type") {
+			t := memory.ParseType(addType)
+			if t == "" {
+				return fmt.Errorf("invalid type %q — use semantic, episodic, procedural, or preference", addType)
+			}
+			entry.Type = t
+		}
 	} else {
 		if len(args) == 0 {
 			return fmt.Errorf("provide content as argument or use -s for shorthand")

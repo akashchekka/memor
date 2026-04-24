@@ -193,7 +193,11 @@ This project uses [memor](https://github.com/akashchekka/memor) for persistent A
 
 **After EVERY response:**
 1. Summarize the response in 2-3 sentences capturing the decision, reasoning, and any rejected alternatives
-2. Run ` + "`memor add -s \"#tag: summary with reasoning\"`" + ` in the terminal immediately
+2. Choose the right memory type and run the appropriate command immediately:
+   - Decisions, facts, architecture: ` + "`memor add -s \"#tag: summary\"`" + `
+   - Bugs fixed, migrations, events: ` + "`memor add --type episodic -s \"#tag: summary\"`" + `
+   - Commands, workflows, how-tos: ` + "`memor add --type procedural -s \"#tag: summary\"`" + `
+   - Style preferences, conventions: ` + "`memor add --type preference -s \"#tag: summary\"`" + `
 3. Do NOT wait until the end of the conversation
 4. Follow all instructions in ` + "`" + skillPath + "`" + `
 
