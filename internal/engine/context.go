@@ -57,7 +57,7 @@ func Context(paths store.Paths, cfg config.Config, opts ContextOptions) (string,
 	}
 
 	// 4. Rank entries by relevance
-	ranked := rankEntries(allEntries, opts.Query, opts.Tags, cfg)
+	ranked := rankEntries(paths, allEntries, opts.Query, opts.Tags, cfg)
 
 	// 5. Knowledge budget split
 	knowledgeBudget := 0
@@ -115,10 +115,21 @@ func Context(paths store.Paths, cfg config.Config, opts ContextOptions) (string,
 }
 
 // rankEntries scores and sorts entries by relevance to the query.
-func rankEntries(entries []memory.Entry, query string, tags []string, cfg config.Config) []memory.ScoredEntry {
+// Loads persisted bloom filter, tag map, and recency ring from disk when available.
+func rankEntries(paths store.Paths, entries []memory.Entry, query string, tags []string, cfg config.Config) []memory.ScoredEntry {
 	if len(entries) == 0 {
 		return nil
 	}
+
+	// Load persisted indexes (best-effort — fall back to in-memory if missing)
+	bloomIdx := index.NewBloomIndex()
+	_ = bloomIdx.Load(paths.Bloom) // ignore error; fresh filter accepts everything
+
+	tagMap := index.NewTagMap()
+	_ = tagMap.Load(paths.Tags)
+
+	recencyRing := index.NewRecencyRing()
+	_ = recencyRing.Load(paths.Recency)
 
 	// Build trigram index for fast prefiltering
 	triIdx := index.NewTrigramIndex()
@@ -132,7 +143,10 @@ func rankEntries(entries []memory.Entry, query string, tags []string, cfg config
 	// Get candidate indices
 	var candidates []int
 	if query != "" {
-		candidates = triIdx.Search(query)
+		// Bloom pre-check: skip full trigram scan if bloom says "definitely not here"
+		if bloomIdx.MayContain(query) {
+			candidates = triIdx.Search(query)
+		}
 	} else {
 		candidates = triIdx.AllDocs()
 	}
@@ -145,9 +159,18 @@ func rankEntries(entries []memory.Entry, query string, tags []string, cfg config
 	// BM25 scoring on candidates
 	bm25 := index.NewBM25Scorer(docs, index.DefaultBM25Params())
 
+	// Build query tag set from explicit tags
 	tagSet := make(map[string]struct{}, len(tags))
 	for _, t := range tags {
 		tagSet[t] = struct{}{}
+	}
+
+	// Build entry ID set from tag map for O(1) tag-based lookups
+	tagMatchIDs := make(map[string]struct{})
+	for _, t := range tags {
+		for _, id := range tagMap.Lookup(t) {
+			tagMatchIDs[id] = struct{}{}
+		}
 	}
 
 	scored := make([]memory.ScoredEntry, 0, len(candidates))
@@ -159,21 +182,32 @@ func rankEntries(entries []memory.Entry, query string, tags []string, cfg config
 			bm25Score = bm25.Score(idx, query)
 		}
 
-		// Tag overlap boost
+		// Tag overlap boost — use tag map when available, fall back to inline
 		tagBoost := 0.0
-		for _, t := range e.Tags {
-			if _, ok := tagSet[t]; ok {
-				tagBoost += 1.0
+		if len(tagMatchIDs) > 0 {
+			if _, ok := tagMatchIDs[e.ID]; ok {
+				tagBoost = 1.0
+			}
+		} else {
+			for _, t := range e.Tags {
+				if _, ok := tagSet[t]; ok {
+					tagBoost += 1.0
+				}
 			}
 		}
 
 		// Type weight
 		typeWeight := cfg.TypeWeight(string(e.Type))
 
-		// Recency decay
-		recencyDecay := 1.0 / (1.0 + e.AgeDays()*cfg.Compaction.Decay.Rate)
+		// Recency: use ring boost if available, else fall back to age-based decay
+		recencyScore := 0.0
+		if ringBoost := recencyRing.RecencyBoost(e.ID); ringBoost > 0 {
+			recencyScore = ringBoost
+		} else {
+			recencyScore = 1.0 / (1.0 + e.AgeDays()*cfg.Compaction.Decay.Rate)
+		}
 
-		score := 0.4*bm25Score + 0.2*tagBoost + 0.2*typeWeight + 0.2*recencyDecay
+		score := 0.4*bm25Score + 0.2*tagBoost + 0.2*typeWeight + 0.2*recencyScore
 
 		scored = append(scored, memory.ScoredEntry{Entry: e, Score: score})
 	}
@@ -269,7 +303,7 @@ func Search(paths store.Paths, cfg config.Config, query string, topN int) ([]mem
 	}
 
 	allEntries := append(snap.Entries, walEntries...)
-	ranked := rankEntries(allEntries, query, nil, cfg)
+	ranked := rankEntries(paths, allEntries, query, nil, cfg)
 
 	if topN > 0 && len(ranked) > topN {
 		ranked = ranked[:topN]

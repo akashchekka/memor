@@ -201,16 +201,21 @@ func rebuildIndexes(paths store.Paths, entries []memory.Entry) error {
 	triIdx := index.NewTrigramIndex()
 	bloomIdx := index.NewBloomIndex()
 	tagMap := index.NewTagMap()
+	recencyRing := index.NewRecencyRing()
 
 	for i, e := range entries {
 		text := e.Content + " " + strings.Join(e.Tags, " ")
 		triIdx.Add(i, text)
 		bloomIdx.Add(text)
 		tagMap.Add(e.ID, e.Tags)
+		recencyRing.Touch(e.ID)
 	}
 
 	if err := bloomIdx.Save(paths.Bloom); err != nil {
 		return err
 	}
-	return tagMap.Save(paths.Tags)
+	if err := tagMap.Save(paths.Tags); err != nil {
+		return err
+	}
+	return recencyRing.Save(paths.Recency)
 }
