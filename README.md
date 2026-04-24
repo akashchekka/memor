@@ -1,10 +1,28 @@
-# Memor
+<p align="center">
+  <img src="assets/memor.png" alt="Memor Architecture" width="800">
+</p>
 
-**Local memory persistence for AI coding assistants.**
+<h1 align="center">Memor</h1>
 
-Every AI coding tool — Copilot, Claude Code, Cursor, Windsurf, Aider — starts every conversation cold, with zero knowledge of past decisions. Memor fixes that. It stores project context locally, indexes it with a full search engine, and gives every tool exactly the right memories within a token budget at conversation start.
+<p align="center">
+  <strong>Local memory persistence for AI coding assistants.</strong>
+</p>
 
-Five text files per project. Full indexing engine. Zero cloud, zero daemon, zero git commits.
+<p align="center">
+  <a href="https://github.com/akashchekka/memor/releases"><img src="https://img.shields.io/github/v/release/akashchekka/memor?style=flat-square&color=blue" alt="GitHub Release"></a>
+  <a href="https://github.com/akashchekka/memor/actions/workflows/release.yml"><img src="https://img.shields.io/github/actions/workflow/status/akashchekka/memor/release.yml?style=flat-square&label=build" alt="Build Status"></a>
+  <a href="https://www.npmjs.com/package/@memor-dev/memor"><img src="https://img.shields.io/npm/v/@memor-dev/memor?style=flat-square&color=cb3837" alt="npm"></a>
+  <a href="https://github.com/akashchekka/memor/blob/main/LICENSE"><img src="https://img.shields.io/github/license/akashchekka/memor?style=flat-square" alt="License"></a>
+  <a href="https://goreportcard.com/report/github.com/akashchekka/memor"><img src="https://goreportcard.com/badge/github.com/akashchekka/memor?style=flat-square" alt="Go Report Card"></a>
+</p>
+
+<p align="center">
+  Every AI coding tool — Copilot, Claude Code, Cursor, Windsurf, Aider — starts every conversation cold, with zero knowledge of past decisions. Memor fixes that. It stores project context locally, indexes it with a full search engine, and gives every tool exactly the right memories within a token budget at conversation start.
+</p>
+
+<p align="center">
+  <em>Five text files per project. Full indexing engine. Zero cloud, zero daemon, zero git commits.</em>
+</p>
 
 ---
 
@@ -23,20 +41,6 @@ Memor saves **~500 tokens per conversation** by surfacing only what's relevant. 
 
 ## How It Works
 
-```
-Conversations ──► APPEND to memory.wal (JSONL)
-                       │
-                       ▼
-                  COMPACTION (score → dedupe → budget)
-                       │
-                       ▼
-                  memory.db (compact DSL, token-budgeted)
-                       │
-                       ▼
-             AI tools READ memory.db + knowledge.db
-             at conversation start
-```
-
 - **Write path**: AI tools append memories as JSONL lines to `memory.wal` — fast, append-only, no coordination.
 - **Read path**: `memor context` retrieves the most relevant memories + knowledge sections within a token budget — powered by trigram index + BM25 ranking for sub-millisecond retrieval.
 - **Compaction**: Periodically merges the WAL into `memory.db`, deduplicates via SHA-256 content hashing, scores by relevance, and enforces the token budget.
@@ -48,7 +52,11 @@ Conversations ──► APPEND to memory.wal (JSONL)
 ### Install
 
 ```bash
-go install github.com/memor-dev/memor@latest
+# npm (recommended)
+npm i -g @memor-dev/memor
+
+# or use directly without installing
+npx @memor-dev/memor init
 ```
 
 ### Initialize in your project
@@ -58,7 +66,9 @@ cd your-project
 memor init
 ```
 
-This creates `.memor/` (auto-added to `.gitignore`), installs a pre-commit safety hook, and copies the memor SKILL.md into your AI tool's skills directory (`.github/skills/memor/SKILL.md` for Copilot by default).
+This creates `.memor/`, injects `copilot-instructions.md` and `.github/skills/memor/SKILL.md` so your AI tool automatically reads and writes memories, installs a pre-commit safety hook, and adds `.memor/` to `.gitignore`. No extra setup needed.
+
+Use `memor init --tools claude,cursor,windsurf` to configure additional AI tools.
 
 ### Add a memory
 
@@ -217,6 +227,47 @@ bm25_b = 0.75                # Length normalization
 5. **Tool-agnostic** — works with any AI coding assistant
 6. **Append-only writes, compacted reads** — LSM-tree inspired architecture
 7. **Zero-config start** — `memor init` and done
+
+---
+
+## Contributing
+
+Contributions are welcome! Memor is written in Go 1.23+.
+
+### Setup
+
+```bash
+git clone https://github.com/akashchekka/memor.git
+cd memor
+go build -o memor
+```
+
+### Run tests
+
+```bash
+go test ./...
+```
+
+### Project structure
+
+```
+main.go              # Entry point
+cmd/                 # CLI commands (cobra)
+internal/
+  config/            # config.toml parsing
+  engine/            # Compaction, context retrieval, knowledge indexing
+  index/             # Trigram, BM25, Bloom filter, recency ring
+  memory/            # Memory entry types
+  store/             # WAL, snapshot, paths
+  token/             # Token counting
+```
+
+### Guidelines
+
+- Keep the CLI fast — every command should complete in under 100ms
+- No external services or network calls
+- Run `go test ./...` before submitting a PR
+- Follow existing code style (no linter config needed, just match what's there)
 
 ---
 
