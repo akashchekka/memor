@@ -1,5 +1,5 @@
 {
-  "name": "memor",
+  "name": "memor-cli",
   "version": "0.1.0",
   "description": "Local memory persistence for AI coding assistants. Zero cloud, zero git commits.",
   "keywords": [
