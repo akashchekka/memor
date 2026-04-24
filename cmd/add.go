@@ -31,11 +31,11 @@ import (
 )
 
 var (
-	addType     string
-	addTags     string
-	addShort    string
-	addExpires  string
-	addSuper    string
+	addType    string
+	addTags    string
+	addShort   string
+	addExpires string
+	addSuper   string
 )
 
 var addCmd = &cobra.Command{

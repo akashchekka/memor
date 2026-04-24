@@ -18,8 +18,8 @@ func Count(s string) int {
 	chars := len(s)
 
 	// Weighted average of two estimators for better accuracy
-	wordEstimate := float64(words) * 1.3  // words tend to be ~1.3 tokens on average
-	charEstimate := float64(chars) / 3.8  // ~3.8 chars per token for mixed content
+	wordEstimate := float64(words) * 1.3 // words tend to be ~1.3 tokens on average
+	charEstimate := float64(chars) / 3.8 // ~3.8 chars per token for mixed content
 
 	estimate := (wordEstimate + charEstimate) / 2.0
 
