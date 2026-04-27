@@ -6,13 +6,15 @@
 // Imports .memor-bootstrap.jsonl if present.
 //
 // Flags:
-//   --tools      Comma-separated tools to configure: copilot,claude,cursor,windsurf
-//   --reinject   Update existing skill files to latest template
+//
+//	--tools      Comma-separated tools to configure: copilot,claude,cursor,windsurf
+//	--reinject   Update existing skill files to latest template
 //
 // Examples:
-//   memor init
-//   memor init --tools copilot,claude,cursor
-//   memor init --reinject
+//
+//	memor init
+//	memor init --tools copilot,claude,cursor
+//	memor init --reinject
 package cmd
 
 import (
@@ -183,6 +185,11 @@ exit 0
 //go:embed skill/SKILL.md
 var skillTemplate string
 
+const (
+	memorInstructionsStart = "<!-- BEGIN MEMOR INSTRUCTIONS -->"
+	memorInstructionsEnd   = "<!-- END MEMOR INSTRUCTIONS -->"
+)
+
 func makeInstructions(skillPath string) string {
 	return `# Memor — Project Memory
 
@@ -208,6 +215,130 @@ This project uses [memor](https://github.com/akashchekka/memor) for persistent A
 
 **Do NOT use file-editing tools to write to ` + "`.memor/memory.wal`" + ` — always use the ` + "`memor`" + ` CLI.**
 `
+}
+
+func wrapMemorInstructions(instructions string) string {
+	return memorInstructionsStart + "\n" + strings.TrimRight(instructions, "\n") + "\n" + memorInstructionsEnd + "\n"
+}
+
+func upsertMemorInstructions(content, instructions string) (string, bool) {
+	wrapped := wrapMemorInstructions(instructions)
+	start := strings.Index(content, memorInstructionsStart)
+	if start >= 0 {
+		end := strings.Index(content[start:], memorInstructionsEnd)
+		if end >= 0 {
+			end += start + len(memorInstructionsEnd)
+			if strings.HasPrefix(content[end:], "\r\n") {
+				end += len("\r\n")
+			} else if strings.HasPrefix(content[end:], "\n") {
+				end++
+			}
+			updated := content[:start] + wrapped + content[end:]
+			return updated, updated != content
+		}
+	}
+
+	if strings.TrimSpace(content) == strings.TrimSpace(instructions) {
+		return wrapped, wrapped != content
+	}
+
+	if strings.TrimSpace(content) == "" {
+		return wrapped, wrapped != content
+	}
+
+	separator := "\n\n"
+	if strings.HasSuffix(content, "\n\n") || strings.HasSuffix(content, "\r\n\r\n") {
+		separator = ""
+	} else if strings.HasSuffix(content, "\n") || strings.HasSuffix(content, "\r\n") {
+		separator = "\n"
+	}
+
+	return content + separator + wrapped, true
+}
+
+func removeMemorInstructions(content, instructions string) (string, bool) {
+	start := strings.Index(content, memorInstructionsStart)
+	if start >= 0 {
+		end := strings.Index(content[start:], memorInstructionsEnd)
+		if end >= 0 {
+			end += start + len(memorInstructionsEnd)
+			updated := removeInstructionRange(content, start, end)
+			return updated, updated != content
+		}
+	}
+
+	if strings.TrimSpace(content) == strings.TrimSpace(instructions) {
+		return "", true
+	}
+
+	start = strings.Index(content, instructions)
+	if start < 0 {
+		return content, false
+	}
+	end := start + len(instructions)
+	updated := removeInstructionRange(content, start, end)
+	return updated, updated != content
+}
+
+func removeInstructionRange(content string, start, end int) string {
+	before := content[:start]
+	after := content[end:]
+
+	if strings.HasPrefix(after, "\r\n") {
+		after = after[len("\r\n"):]
+	} else if strings.HasPrefix(after, "\n") {
+		after = after[1:]
+	}
+
+	if strings.HasSuffix(before, "\r\n\r\n") {
+		before = before[:len(before)-len("\r\n")]
+	} else if strings.HasSuffix(before, "\n\n") {
+		before = before[:len(before)-1]
+	}
+
+	updated := before + after
+	if strings.TrimSpace(updated) == "" {
+		updated = ""
+	}
+	return updated
+}
+
+func writeMemorInstructionsFile(path, instructions string) (bool, error) {
+	content, err := os.ReadFile(path)
+	if err != nil && !os.IsNotExist(err) {
+		return false, err
+	}
+
+	updated, changed := upsertMemorInstructions(string(content), instructions)
+	if !changed {
+		return false, nil
+	}
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return false, err
+	}
+	if err := os.WriteFile(path, []byte(updated), 0o644); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func clearMemorInstructionsFile(path, instructions string) (bool, error) {
+	content, err := os.ReadFile(path)
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+
+	updated, changed := removeMemorInstructions(string(content), instructions)
+	if !changed {
+		return false, nil
+	}
+	if err := os.WriteFile(path, []byte(updated), 0o644); err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // toolInstructionFile maps each tool to its auto-discovered instruction file.
@@ -314,14 +445,14 @@ func injectToolConfigs(projectRoot string, toolsFlag string, reinject bool) erro
 			continue
 		}
 		fullPath := filepath.Join(projectRoot, inf.path)
-		if _, err := os.Stat(fullPath); os.IsNotExist(err) || reinject {
-			if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
-				return err
-			}
-			if err := os.WriteFile(fullPath, []byte(inf.content), 0o644); err != nil {
-				return err
-			}
+		_, statErr := os.Stat(fullPath)
+		existed := statErr == nil
+		if changed, err := writeMemorInstructionsFile(fullPath, inf.content); err != nil {
+			return err
+		} else if changed {
 			if reinject {
+				fmt.Printf("Updated %s\n", inf.path)
+			} else if existed {
 				fmt.Printf("Updated %s\n", inf.path)
 			} else {
 				fmt.Printf("Created %s\n", inf.path)

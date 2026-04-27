@@ -4,11 +4,13 @@
 // from AI tool directories and cleans up empty parent directories.
 //
 // Flags:
-//   --all   Also remove skill files from AI tool directories
+//
+//	--all   Also remove skill files from AI tool directories
 //
 // Examples:
-//   memor purge
-//   memor purge --all
+//
+//	memor purge
+//	memor purge --all
 package cmd
 
 import (
@@ -76,17 +78,17 @@ func runPurge(cmd *cobra.Command, args []string) error {
 			}
 		}
 
-		// Remove instruction files (copilot-instructions.md, CLAUDE.md, .cursorrules, .windsurfrules)
+		// Clear injected instruction blocks without deleting user-owned instruction files.
 		for _, inf := range getToolInstructionFiles() {
 			fullPath := filepath.Join(cwd, inf.path)
-			if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+			cleared, err := clearMemorInstructionsFile(fullPath, inf.content)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "warning: could not clear %s: %v\n", inf.path, err)
 				continue
 			}
-			if err := os.Remove(fullPath); err != nil {
-				fmt.Fprintf(os.Stderr, "warning: could not remove %s: %v\n", inf.path, err)
-				continue
+			if cleared {
+				fmt.Printf("Cleared memor instructions from %s\n", inf.path)
 			}
-			fmt.Printf("Removed %s\n", inf.path)
 		}
 	}
 
