@@ -35,8 +35,6 @@
 | Inconsistent outputs across sessions | Bugs and conflicting patterns |
 | Manual context pasting | Context window pollution |
 
-Memor saves **~500 tokens per conversation** by surfacing only what's relevant. At scale, that's **100 billion tokens/month** across 1M developers.
-
 ---
 
 ## How It Works
