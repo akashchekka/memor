@@ -9,7 +9,7 @@ import (
 
 func TestUpsertMemorInstructionsAppendsToExistingContent(t *testing.T) {
 	existing := "# Existing Instructions\n\nKeep this.\n"
-	instructions := makeInstructions()
+	instructions := makeInstructions(".github/skills/memor/SKILL.md")
 
 	updated, changed := upsertMemorInstructions(existing, instructions)
 
@@ -29,7 +29,7 @@ func TestUpsertMemorInstructionsAppendsToExistingContent(t *testing.T) {
 
 func TestRemoveMemorInstructionsPreservesExistingContent(t *testing.T) {
 	existing := "# Existing Instructions\n\nKeep this.\n"
-	instructions := makeInstructions()
+	instructions := makeInstructions(".github/skills/memor/SKILL.md")
 	updated, _ := upsertMemorInstructions(existing, instructions)
 
 	cleared, changed := removeMemorInstructions(updated, instructions)
@@ -46,7 +46,7 @@ func TestRemoveMemorInstructionsPreservesExistingContent(t *testing.T) {
 }
 
 func TestRemoveMemorInstructionsPreservesFollowingContent(t *testing.T) {
-	instructions := makeInstructions()
+	instructions := makeInstructions(".github/skills/memor/SKILL.md")
 	content := "# Existing Instructions\n\n" + wrapMemorInstructions(instructions) + "More instructions.\n"
 
 	cleared, changed := removeMemorInstructions(content, instructions)
@@ -62,7 +62,7 @@ func TestRemoveMemorInstructionsPreservesFollowingContent(t *testing.T) {
 func TestClearMemorInstructionsLeavesFileInPlace(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "CLAUDE.md")
-	instructions := makeInstructions()
+	instructions := makeInstructions(".github/skills/memor/SKILL.md")
 	if err := os.WriteFile(path, []byte(wrapMemorInstructions(instructions)), 0o644); err != nil {
 		t.Fatalf("write test file: %v", err)
 	}
@@ -88,7 +88,7 @@ func TestClearMemorInstructionsLeavesFileInPlace(t *testing.T) {
 
 func TestUpsertMemorInstructionsUpdatesExistingBlock(t *testing.T) {
 	existing := "# Existing Instructions\n\n" + wrapMemorInstructions("old memor instructions")
-	instructions := makeInstructions()
+	instructions := makeInstructions(".github/skills/memor/SKILL.md")
 
 	updated, changed := upsertMemorInstructions(existing, instructions)
 
