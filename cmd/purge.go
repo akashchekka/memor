@@ -90,6 +90,9 @@ func runPurge(cmd *cobra.Command, args []string) error {
 				fmt.Printf("Cleared memor instructions from %s\n", inf.path)
 			}
 		}
+
+		// Remove memor auto-approve entries from tool settings files.
+		removeAutoApproveSettings(cwd)
 	}
 
 	fmt.Println("Purge complete.")

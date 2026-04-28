@@ -7,6 +7,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Version is set at build time via -ldflags.
+var Version = "dev"
+
 var rootCmd = &cobra.Command{
 	Use:   "memor",
 	Short: "Local memory persistence for AI coding assistants",
@@ -41,4 +44,5 @@ func init() {
 	rootCmd.AddCommand(codeCmd)
 	rootCmd.AddCommand(exportCmd)
 	rootCmd.AddCommand(importCmd)
+	rootCmd.AddCommand(versionCmd)
 }

@@ -7,8 +7,8 @@ description: Local memory persistence for AI coding assistants. Read .memor/memo
 > responding to the user. This loads project memory.
 
 > **CRITICAL:** This skill MUST be loaded and executed at the START of EVERY conversation,
-> before processing any user request. Run `memor context` first. Also load after every
-> response to save memories via `memor add`. This is not optional.
+> before processing any user request. Run `memor context` first. Save memories via
+> `memor add` at the end of the conversation after answering. This is not optional.
 
 # Memor — AI Agent Skill
 
@@ -18,7 +18,7 @@ description: Local memory persistence for AI coding assistants. Read .memor/memo
 
 Use when:
 - Starting a conversation — read `.memor/memory.db` for project context
-- After EVERY response where a decision was made, a problem was solved, a command was run, or something worth remembering happened — append to `.memor/memory.wal` immediately
+- After EVERY response where a decision was made, a problem was solved, a command was run, or something worth remembering happened — save via `memor add` at the end of the conversation
 - User asks to "remember this", "save this for later", "add to memory"
 - User asks about past decisions, conventions, or project history
 - User asks to search memories, query knowledge, or check what's stored
@@ -73,7 +73,7 @@ Tags follow `#` after the prefix. They indicate the topic: `#auth`, `#db`, `#dep
 
 ## Writing Memory
 
-**After EVERY response**, summarize the response, then save it by running the memor CLI in the terminal. This is not optional — conversations can be interrupted or lost at any time:
+**After EVERY response**, summarize the response, then save it by running the memor CLI in the terminal. `memor add` should be executed at the end of conversation after answering:
 
 ```bash
 memor add -s "#tag1 #tag2: concise memory content"
@@ -86,7 +86,7 @@ memor add --type episodic --tags "bug,api" "Fixed N+1 query in dashboard loader"
 
 Do NOT use file-creation or file-editing tools to write to `.memor/memory.wal` — they overwrite instead of appending. Always use the memor CLI.
 
-Do NOT wait until the end of the conversation. Write immediately — conversations can be interrupted or lost at any time.
+`memor add` should be executed at the end of conversation after answering.
 
 ### What to Write
 
@@ -123,12 +123,12 @@ memor code save <file-path> \
   --logic "Step-by-step flow for complex files"
 ```
 
-**AFTER writing or modifying a source file**, immediately update the summary:
+**AFTER writing or modifying a source file**, update the summary at the end of the conversation:
 ```bash
 memor code save <file-path> --exports "updated exports" --summary "updated summary"
 ```
 
-This is not optional — the next agent depends on accurate code summaries.
+This is not optional — the next agent depends on accurate code summaries. `memor code` should be executed at the end of conversation after answering.
 
 ### What NOT to Write
 
@@ -140,7 +140,7 @@ This is not optional — the next agent depends on accurate code summaries.
 
 ### Example: After a Response
 
-Developer asked you to add Redis caching to the auth endpoint. You did it. Now write immediately:
+Developer asked you to add Redis caching to the auth endpoint. You did it. Now save at the end of the conversation:
 
 ```bash
 memor add -s "#cache #auth: Added Redis 7 for auth session cache with 15min TTL. Chose Redis over in-memory cache because auth service runs on 3 replicas and sessions must be shared. Using ioredis client in src/lib/redis.ts."
