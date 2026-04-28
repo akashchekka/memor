@@ -6,7 +6,7 @@ package constants
 // Memory defaults
 const (
 	DefaultTokenBudget      = 15000
-	DefaultWALMaxEntries    = 100
+	DefaultWALMaxEntries    = 2
 	DefaultArchiveAfterDays = 90
 )
 

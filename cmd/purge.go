@@ -32,7 +32,7 @@ var purgeCmd = &cobra.Command{
 }
 
 func init() {
-	purgeCmd.Flags().BoolVar(&purgeAll, "all", false, "Also remove injected instructions from AI tool config files (.github/copilot-instructions.md, CLAUDE.md, .cursorrules, .windsurfrules)")
+	purgeCmd.Flags().BoolVar(&purgeAll, "all", false, "Also remove injected instructions from AI tool config files (AGENTS.md, .cursorrules, .windsurfrules)")
 }
 
 func runPurge(cmd *cobra.Command, args []string) error {
@@ -54,30 +54,6 @@ func runPurge(cmd *cobra.Command, args []string) error {
 	fmt.Println("Removed .memor/")
 
 	if purgeAll {
-		for _, tc := range getToolConfigs() {
-			// Remove the skills/memor/ directory for this tool
-			skillDir := filepath.Dir(filepath.Join(cwd, tc.path))
-			if _, err := os.Stat(skillDir); os.IsNotExist(err) {
-				continue
-			}
-			if err := os.RemoveAll(skillDir); err != nil {
-				fmt.Fprintf(os.Stderr, "warning: could not remove %s: %v\n", filepath.Dir(tc.path), err)
-				continue
-			}
-			fmt.Printf("Removed %s\n", filepath.Dir(tc.path))
-
-			// Clean up empty parent directories (skills/, .github/, etc.)
-			dir := filepath.Dir(skillDir)
-			for dir != cwd {
-				entries, err := os.ReadDir(dir)
-				if err != nil || len(entries) > 0 {
-					break
-				}
-				os.Remove(dir)
-				dir = filepath.Dir(dir)
-			}
-		}
-
 		// Clear injected instruction blocks without deleting user-owned instruction files.
 		for _, inf := range getToolInstructionFiles() {
 			fullPath := filepath.Join(cwd, inf.path)

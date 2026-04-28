@@ -18,7 +18,6 @@
 package cmd
 
 import (
-	_ "embed"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -187,15 +186,12 @@ exit 0
 	return nil
 }
 
-//go:embed skill/SKILL.md
-var skillTemplate string
-
 const (
 	memorInstructionsStart = "<!-- BEGIN MEMOR INSTRUCTIONS -->"
 	memorInstructionsEnd   = "<!-- END MEMOR INSTRUCTIONS -->"
 )
 
-func makeInstructions(skillPath string) string {
+func makeInstructions() string {
 	return `# Memor — Project Memory (MANDATORY)
 
 This project uses [memor](https://github.com/akashchekka/memor) for persistent AI memory.
@@ -203,7 +199,6 @@ You MUST follow these rules. Skipping any step is a violation.
 
 ## RULE 1: START of every conversation
 You MUST run ` + "`memor context`" + ` in the terminal BEFORE doing anything else.
-Then read and follow ` + "`" + skillPath + "`" + `.
 
 ## RULE 2: After EVERY response
 Write 2-3 sentences capturing the decision, reasoning, and rejected alternatives.
@@ -355,47 +350,16 @@ type toolInstructionFile struct {
 }
 
 func getToolInstructionFiles() []toolInstructionFile {
+	instructions := makeInstructions()
 	return []toolInstructionFile{
-		{"GitHub Copilot", filepath.Join(".github", "copilot-instructions.md"), makeInstructions(".github/skills/memor/SKILL.md")},
-		{"Claude Code", "CLAUDE.md", makeInstructions(".claude/skills/memor/SKILL.md")},
-		{"Cursor", ".cursorrules", makeInstructions(".cursor/skills/memor/SKILL.md")},
-		{"Windsurf", ".windsurfrules", makeInstructions(".windsurf/skills/memor/SKILL.md")},
-	}
-}
-
-type toolConfig struct {
-	name     string
-	path     string // relative to project root
-	template string
-}
-
-func getToolConfigs() []toolConfig {
-	return []toolConfig{
-		{
-			name:     "GitHub Copilot",
-			path:     filepath.Join(".github", "skills", "memor", "SKILL.md"),
-			template: skillTemplate,
-		},
-		{
-			name:     "Claude Code",
-			path:     filepath.Join(".claude", "skills", "memor", "SKILL.md"),
-			template: skillTemplate,
-		},
-		{
-			name:     "Cursor",
-			path:     filepath.Join(".cursor", "skills", "memor", "SKILL.md"),
-			template: skillTemplate,
-		},
-		{
-			name:     "Windsurf",
-			path:     filepath.Join(".windsurf", "skills", "memor", "SKILL.md"),
-			template: skillTemplate,
-		},
+		{"GitHub Copilot", "AGENTS.md", instructions},
+		{"Cursor", ".cursorrules", instructions},
+		{"Windsurf", ".windsurfrules", instructions},
 	}
 }
 
 func injectToolConfigs(projectRoot string, toolsFlag string, reinject bool) error {
-	configs := getToolConfigs()
+	files := getToolInstructionFiles()
 
 	// If specific tools requested, filter
 	if toolsFlag != "" {
@@ -404,48 +368,17 @@ func injectToolConfigs(projectRoot string, toolsFlag string, reinject bool) erro
 			requested[strings.TrimSpace(strings.ToLower(t))] = struct{}{}
 		}
 
-		var filtered []toolConfig
-		for _, tc := range configs {
-			key := strings.ToLower(strings.SplitN(tc.name, " ", 2)[0])
+		var filtered []toolInstructionFile
+		for _, inf := range files {
+			key := strings.ToLower(strings.SplitN(inf.toolName, " ", 2)[0])
 			if _, ok := requested[key]; ok {
-				filtered = append(filtered, tc)
+				filtered = append(filtered, inf)
 			}
 		}
-		configs = filtered
+		files = filtered
 	}
 
-	for _, tc := range configs {
-		fullPath := filepath.Join(projectRoot, tc.path)
-
-		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
-			// When no --tools flag, only create Copilot by default
-			if toolsFlag == "" && tc.name != "GitHub Copilot" {
-				continue
-			}
-			if err := os.MkdirAll(filepath.Dir(fullPath), 0o755); err != nil {
-				return err
-			}
-			if err := os.WriteFile(fullPath, []byte(tc.template), 0o644); err != nil {
-				return err
-			}
-			fmt.Printf("Created %s\n", tc.path)
-		} else if reinject {
-			if err := os.WriteFile(fullPath, []byte(tc.template), 0o644); err != nil {
-				return err
-			}
-			fmt.Printf("Updated %s\n", tc.path)
-		}
-	}
-
-	// Create instruction files for each configured tool
-	configuredTools := make(map[string]struct{})
-	for _, tc := range configs {
-		configuredTools[tc.name] = struct{}{}
-	}
-	for _, inf := range getToolInstructionFiles() {
-		if _, ok := configuredTools[inf.toolName]; !ok {
-			continue
-		}
+	for _, inf := range files {
 		// When no --tools flag, only create Copilot instruction file by default
 		if toolsFlag == "" && inf.toolName != "GitHub Copilot" {
 			continue
