@@ -76,6 +76,14 @@ jobs:
           node-version: 20
           registry-url: https://registry.npmjs.org
 
+      - name: Verify npm auth and scope access
+        run: |
+          npm whoami
+          npm access ls-packages @memor-dev > /tmp/npm-scope-access.json
+          echo "Verified npm token can query @memor-dev scope access."
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Publish to npm
         working-directory: npm
         run: npm publish --access public
